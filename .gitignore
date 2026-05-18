@@ -1,0 +1,8 @@
+node_modules/
+.env
+logs/*.json
+mobile-app/node_modules/
+mobile-app/.expo/
+mobile-app/dist/
+*.log
+.DS_Store
