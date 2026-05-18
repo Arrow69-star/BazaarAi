@@ -1,0 +1,7 @@
+.git/
+node_modules/
+mobile-app/node_modules/
+mobile-app/.expo/
+logs/*.json
+*.log
+.env

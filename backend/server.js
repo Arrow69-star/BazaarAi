@@ -177,6 +177,69 @@ app.post('/api/demo/price-dispute', async (req, res) => {
   res.json({ success: true, demo: 'PRICE_DISPUTE', result });
 });
 
+// ─── Upload to Google Cloud Storage ──────────────────────────────
+app.post('/api/gcs/upload', async (req, res) => {
+  try {
+    const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID;
+    const bucketName = process.env.GCS_BUCKET_NAME || 'bazaarai-project-files';
+
+    if (!keyFile || !fs.existsSync(keyFile)) {
+      return res.status(400).json({
+        error: 'Service account key not configured',
+        hint: 'Set GOOGLE_APPLICATION_CREDENTIALS in .env to your service-account.json path'
+      });
+    }
+
+    const { Storage } = require('@google-cloud/storage');
+    const storage = new Storage({ projectId, keyFilename: keyFile });
+    const bucket = storage.bucket(bucketName);
+
+    // Ensure bucket exists
+    const [exists] = await bucket.exists();
+    if (!exists) {
+      await storage.createBucket(bucketName, { location: 'ASIA-SOUTH1' });
+    }
+
+    const uploaded = [];
+    const filesToUpload = [
+      { local: path.join(DATA_DIR, 'providers.json'), remote: 'bazaarai/data/providers.json' },
+    ];
+
+    // Add all log files
+    if (fs.existsSync(LOGS_DIR)) {
+      fs.readdirSync(LOGS_DIR).filter(f => f.endsWith('.json')).forEach(f => {
+        filesToUpload.push({ local: path.join(LOGS_DIR, f), remote: `bazaarai/logs/${f}` });
+      });
+    }
+
+    for (const { local, remote } of filesToUpload) {
+      if (!fs.existsSync(local)) continue;
+      await bucket.upload(local, { destination: remote });
+      uploaded.push(remote);
+    }
+
+    res.json({ success: true, uploaded, bucket: bucketName, count: uploaded.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/gcs/files', async (req, res) => {
+  try {
+    const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    if (!keyFile || !fs.existsSync(keyFile)) {
+      return res.status(400).json({ error: 'Service account key not configured' });
+    }
+    const { Storage } = require('@google-cloud/storage');
+    const storage = new Storage({ projectId: process.env.GOOGLE_CLOUD_PROJECT_ID, keyFilename: keyFile });
+    const [files] = await storage.bucket(process.env.GCS_BUCKET_NAME || 'bazaarai-project-files').getFiles({ prefix: 'bazaarai/' });
+    res.json({ files: files.map(f => ({ name: f.name, size: f.metadata.size, updated: f.metadata.updated })) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Start Server ─────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log('\n╔══════════════════════════════════════════════════╗');

@@ -7,7 +7,7 @@
 const { randomUUID } = require('crypto');
 
 const LoggingAgent       = require('./15_loggingAgent');
-const { runIntentAgent }           = require('./01_intentAgent');
+const { runIntentAgent, runIntentAgentAsync } = require('./01_intentAgent');
 const { runContextAgent }          = require('./02_contextAgent');
 const { classifyComplexity }       = require('./03_complexityAgent');
 const { runProviderDiscoveryAgent }= require('./04_providerDiscoveryAgent');
@@ -47,9 +47,12 @@ async function orchestrate(rawUserText, options = {}) {
   };
 
   try {
-    // ═══ STEP 1: INTENT ═══
+    // ═══ STEP 1: INTENT (Gemini AI if key set, keyword fallback otherwise) ═══
     console.log('▶ STEP 1: Intent Agent');
-    const intent = runIntentAgent(rawUserText, logger);
+    const { isGeminiEnabled } = require('./geminiService');
+    const intent = isGeminiEnabled()
+      ? await runIntentAgentAsync(rawUserText, logger)
+      : runIntentAgent(rawUserText, logger);
     result.stages.intent = intent;
 
     if (intent.needs_clarification) {

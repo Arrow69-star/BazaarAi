@@ -218,4 +218,40 @@ function runIntentAgent(rawText, logger) {
   return output;
 }
 
-module.exports = { runIntentAgent };
+async function runIntentAgentAsync(rawText, logger) {
+  const { isGeminiEnabled, geminiExtractIntent } = require('./geminiService');
+  logger.logAgentStart('IntentAgent', { raw_text: rawText, mode: isGeminiEnabled() ? 'GEMINI_AI' : 'KEYWORD' });
+
+  if (isGeminiEnabled()) {
+    try {
+      console.log('[IntentAgent] 🧠 Using Gemini AI for real NLP...');
+      const g = await geminiExtractIntent(rawText);
+      if (g) {
+        const location = extractLocation(rawText) || (g.location ? { sector: g.location, city: 'Islamabad', lat: 33.6844, lng: 73.0479 } : null);
+        const timeInfo = extractTime(rawText);
+        const output = {
+          service_type: g.service_type,
+          issue_description: g.issue_description || rawText,
+          location, time: timeInfo,
+          urgency: g.urgency || 'NORMAL',
+          budget_preference: g.budget_sensitivity || 'NEUTRAL',
+          language_detected: g.language_detected || 'roman_urdu',
+          confidence_score: g.confidence_score || 0.9,
+          needs_clarification: g.needs_clarification || false,
+          clarification_questions: g.clarification_question ? [g.clarification_question] : [],
+          keywords_detected: g.keywords_detected || [],
+          ai_powered: true,
+          ai_model: 'gemini-1.5-flash',
+        };
+        logger.logAgentComplete('IntentAgent', output, `Gemini AI: ${output.service_type} @ ${output.location?.sector} conf=${output.confidence_score}`);
+        return output;
+      }
+    } catch (err) {
+      console.log('[IntentAgent] Gemini error, keyword fallback:', err.message);
+    }
+  }
+  // Keyword fallback
+  return runIntentAgent(rawText, logger);
+}
+
+module.exports = { runIntentAgent, runIntentAgentAsync };
