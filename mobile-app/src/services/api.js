@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-// Change this to your machine's IP when testing on a physical device
-// e.g. 'http://192.168.1.100:3000'
-const BASE_URL = 'http://localhost:3000';
+// 🔧 UPDATE THIS URL after deploying backend to Vercel:
+// e.g. 'https://bazaarai-backend.vercel.app'
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,

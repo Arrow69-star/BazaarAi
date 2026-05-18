@@ -6,3 +6,5 @@ mobile-app/.expo/
 mobile-app/dist/
 *.log
 .DS_Store
+
+.vercel
