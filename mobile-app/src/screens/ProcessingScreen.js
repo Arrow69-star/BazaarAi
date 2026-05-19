@@ -8,26 +8,26 @@ import { COLORS, RADIUS, SPACING, SIZES } from '../constants/theme';
 import { submitRequest } from '../services/api';
 
 const AGENT_SEQUENCE = [
-  { name: 'IntentAgent',              label: 'Parsing your request…',        delay: 300  },
-  { name: 'ContextAgent',             label: 'Enriching location & time…',   delay: 900  },
-  { name: 'ComplexityClassifier',     label: 'Classifying job complexity…',  delay: 1500 },
-  { name: 'ProviderDiscoveryAgent',   label: 'Searching providers nearby…',  delay: 2100 },
-  { name: 'MatchingEngine',           label: 'Running weighted scoring…',     delay: 2700 },
-  { name: 'SmartDecisionAgent',       label: 'Selecting best provider…',     delay: 3300 },
-  { name: 'PricingAgent',             label: 'Calculating dynamic price…',   delay: 3900 },
-  { name: 'SchedulingAgent',          label: 'Checking availability…',       delay: 4500 },
-  { name: 'BookingAgent',             label: 'Confirming booking…',          delay: 5100 },
-  { name: 'NotificationAgent',        label: 'Sending confirmations…',       delay: 5700 },
-  { name: 'LiveSimulationAgent',      label: 'Simulating service lifecycle…',delay: 6300 },
+  { name: 'IntentAgent',              label: 'Parsing your request...',        delay: 300  },
+  { name: 'ContextAgent',             label: 'Enriching location & time...',   delay: 900  },
+  { name: 'ComplexityClassifier',     label: 'Classifying job complexity...',  delay: 1500 },
+  { name: 'ProviderDiscoveryAgent',   label: 'Searching providers nearby...',  delay: 2100 },
+  { name: 'MatchingEngine',           label: 'Running weighted scoring...',     delay: 2700 },
+  { name: 'SmartDecisionAgent',       label: 'Selecting best provider...',     delay: 3300 },
+  { name: 'PricingAgent',             label: 'Calculating dynamic price...',   delay: 3900 },
+  { name: 'SchedulingAgent',          label: 'Checking availability...',       delay: 4500 },
+  { name: 'BookingAgent',             label: 'Confirming booking...',          delay: 5100 },
+  { name: 'NotificationAgent',        label: 'Sending confirmations...',       delay: 5700 },
+  { name: 'LiveSimulationAgent',      label: 'Simulating service lifecycle...',delay: 6300 },
 ];
 
 export default function ProcessingScreen({ navigation, route }) {
-  const { userText, simulateCancellation, simulatePriceDispute } = route.params || {};
+  const { userText, simulateCancellation, simulatePriceDispute, forceMode } = route.params || {};
   const [agentStatuses, setAgentStatuses] = useState(
     AGENT_SEQUENCE.reduce((acc, a) => ({ ...acc, [a.name]: 'pending' }), {})
   );
   const [agentOutputs, setAgentOutputs] = useState({});
-  const [phase, setPhase] = useState('Initializing agents…');
+  const [phase, setPhase] = useState('Initializing agents...');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
   const progressAnim = useRef(new Animated.Value(0)).current;
@@ -51,7 +51,6 @@ export default function ProcessingScreen({ navigation, route }) {
   };
 
   const runPipeline = async () => {
-    // Animate each agent card with fake step-by-step reveal
     for (let i = 0; i < AGENT_SEQUENCE.length; i++) {
       const agent = AGENT_SEQUENCE[i];
       await delay(550);
@@ -65,13 +64,12 @@ export default function ProcessingScreen({ navigation, route }) {
       const response = await submitRequest(userText, {
         simulateCancellation,
         simulatePriceDispute,
+        forceMode
       });
 
       const raw = response?.result || {};
-      // Normalise Python API response → ResultsScreen format
       const adapted = adaptPythonResponse(raw, userText);
 
-      // Show per-agent summaries
       const outputMap = {
         IntentAgent:            `Service: ${raw.intent?.service_type || '?'} | Conf: ${Math.round((raw.intent?.confidence || 0) * 100)}%`,
         ContextAgent:           'Location enriched | Demand scored',
@@ -113,7 +111,6 @@ export default function ProcessingScreen({ navigation, route }) {
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0A0E1A', '#111827']} style={StyleSheet.absoluteFill} />
 
-      {/* Header */}
       <Animated.View style={[styles.header, { opacity: headerAnim }]}>
         <Text style={styles.title}>🧠 AI Processing</Text>
         <Text style={styles.query} numberOfLines={2}>"{userText}"</Text>
@@ -137,7 +134,6 @@ export default function ProcessingScreen({ navigation, route }) {
         )}
       </Animated.View>
 
-      {/* Agent Steps — THE WINNING SCREEN */}
       <ScrollView style={styles.stepsScroll} contentContainerStyle={styles.stepsContent}>
         <Text style={styles.stepsLabel}>🔄 Agent Pipeline</Text>
         {AGENT_SEQUENCE.map((agent, i) => (
@@ -158,37 +154,9 @@ function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function getStageKey(agentName) {
-  const map = {
-    IntentAgent: 'intent',
-    ContextAgent: 'context',
-    ComplexityClassifier: 'complexity',
-    ProviderDiscoveryAgent: 'discovery',
-    MatchingEngine: 'matching',
-    SmartDecisionAgent: 'decision',
-    PricingAgent: 'pricing',
-    SchedulingAgent: 'scheduling',
-    BookingAgent: 'booking',
-    NotificationAgent: 'notifications',
-    LiveSimulationAgent: 'simulation',
-  };
-  return map[agentName] || agentName.toLowerCase();
-}
-
-function summarize(stageData) {
-  if (!stageData) return 'Completed';
-  if (stageData.service_type) return `Service: ${stageData.service_type} | Conf: ${Math.round((stageData.confidence_score||0)*100)}%`;
-  if (stageData.total_found !== undefined) return `Found ${stageData.total_found} providers`;
-  if (stageData.selected_provider) return `Selected: ${stageData.selected_provider.name}`;
-  if (stageData.total_price) return `Total: PKR ${stageData.total_price}`;
-  if (stageData.booking_id) return `ID: ${stageData.booking_id}`;
-  if (stageData.display_time) return `Slot: ${stageData.display_time}`;
-  return 'Done';
-}
-
 function adaptPythonResponse(raw, userText) {
   if (!raw) return buildDemoResult(userText);
-  if (raw.source === 'node') return raw; // already correct format
+  if (raw.source === 'node') return raw;
   
   const intent = raw.intent || {};
   const discovery = raw.discovery || {};
@@ -197,7 +165,6 @@ function adaptPythonResponse(raw, userText) {
   const receipt = raw.receipt || {};
   const failure = raw.fallback_triggered || false;
   
-  // Format the top3 into the matching struct ResultsScreen expects
   const mappedTop3 = top3.map((p, i) => ({
     id: p.id,
     rank: i + 1,
