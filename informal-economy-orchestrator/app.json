@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "BazaarAI Orchestrator",
+    "slug": "informal-economy-orchestrator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "bazaarai",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": ["**/*"],
+    "ios": { "supportsTablet": true },
+    "android": { "adaptiveIcon": { "backgroundColor": "#0A0E1A" } },
+    "web": { "bundler": "metro", "output": "single" },
+    "plugins": ["expo-router"],
+    "experiments": { "typedRoutes": false }
+  }
+}
