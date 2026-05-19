@@ -275,6 +275,32 @@ function adaptPythonResponse(raw, userText) {
 }
 
 function buildDemoResult(text) {
+  return {
+    session_id: 'demo_session',
+    raw_input: text,
+    final_output: {
+      service_request: { service: 'AC Repair', location: 'G-13, Islamabad', time: 'Tomorrow morning (9:00 AM)', urgency: 'NORMAL', language: 'roman_urdu' },
+      recommended_provider: { name: 'ColdBreeze AC Experts', rating: 4.9, distance: '1.1km', specialization: 'AC Specialist', phone: '+92-319-0123456' },
+      reasoning: ['Highest overall weighted score (93%)', 'Excellent reliability (96%)', 'Very low cancellation risk (2%)', 'Top-rated provider ⭐4.9'],
+      pricing_breakdown: {
+        base_fee: { amount: 1100, label: 'Visit + Service Fee' },
+        complexity_cost: { amount: 0, label: 'Basic Service' },
+        distance_cost: { amount: 17, label: 'Travel (1.1km)' },
+        urgency_fee: { amount: 0, label: 'Standard' },
+        demand_surge: { amount: 165, label: 'Demand Surge (HIGH)' },
+        discount: { amount: -128, label: 'Budget Discount' },
+      },
+      total_price: 'PKR 1,154',
+      booking_confirmation: { booking_id: 'BAZ-DEMO-001', slot: '9:00 AM – 11:00 AM', status: 'CONFIRMED ✅' },
+    },
+    stages: {
+      booking: { confirmed: true, booking_id: 'BAZ-DEMO-001', receipt: { booking_id: 'BAZ-DEMO-001', service_type: 'AC Repair', location_display: 'G-13, Islamabad', slot_display: '9:00 AM – 11:00 AM', provider_name: 'ColdBreeze AC Experts', provider_phone: '+92-319-0123456', total_amount: 1154, text: 'DEMO RECEIPT' }, booking: { provider: { rating: 4.9 }, pricing: { total: 1154 }, schedule: { display: '9:00 AM – 11:00 AM' } } },
+      pricing: { total_price: 1154, breakdown: { base_fee: { amount: 1100, label: 'Visit + Service Fee' }, distance_cost: { amount: 17, label: 'Travel' }, demand_surge: { amount: 165, label: 'Demand Surge' }, discount: { amount: -128, label: 'Budget Discount' } } },
+      matching: { top3: [{ rank: 1, name: 'ColdBreeze AC Experts', rating: 4.9, distance_km: 1.1, score: { total: 0.93 }, specialization: 'AC Specialist', sector: 'G-13', availability_status: 'AVAILABLE', reliability_score: 0.96, cancellation_rate: 0.02, price_base: 1100, rank_reason: 'Highest overall score. Excellent reliability (96%). Very low cancellation (2%).' }, { rank: 2, name: 'Ali AC Services', rating: 4.7, distance_km: 0.5, score: { total: 0.84 }, specialization: 'AC Specialist', sector: 'G-13', availability_status: 'AVAILABLE', reliability_score: 0.92, cancellation_rate: 0.05, price_base: 1000, rank_reason: 'Closer but lower reliability score.' }, { rank: 3, name: 'Ahmed AC Solutions', rating: 4.1, distance_km: 0.4, score: { total: 0.72 }, specialization: 'Budget AC Repair', sector: 'G-11', availability_status: 'AVAILABLE', reliability_score: 0.78, cancellation_rate: 0.18, price_base: 700, rank_reason: 'Budget-friendly alternative. Lower rating and high cancellation risk.' }] },
+      simulation: { stages: [{ stage: 'PROVIDER_ASSIGNED', message: 'ColdBreeze AC Experts has accepted your booking', timestamp: new Date().toISOString() }, { stage: 'EN_ROUTE', message: 'Provider is on the way — ETA 15 min', timestamp: new Date(Date.now() + 15 * 60000).toISOString() }, { stage: 'ARRIVED', message: 'Provider has arrived at G-13', timestamp: new Date(Date.now() + 30 * 60000).toISOString() }, { stage: 'JOB_STARTED', message: 'AC Repair service started', timestamp: new Date(Date.now() + 35 * 60000).toISOString() }, { stage: 'JOB_COMPLETED', message: 'Service completed successfully!', timestamp: new Date(Date.now() + 90 * 60000).toISOString() }] },
+    }
+  };
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
