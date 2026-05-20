@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Firebase Initialization
- * Connects to Firestore for persistent bookings & logs
- * Falls back gracefully to local JSON if no credentials
- */
+
 
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -18,7 +14,7 @@ const firebaseConfig = {
   appId:             process.env.EXPO_PUBLIC_FIREBASE_APP_ID        || "YOUR_APP_ID",
 };
 
-// Prevent duplicate initialization in hot-reload
+
 let app;
 try {
   app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];

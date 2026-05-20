@@ -42,7 +42,7 @@ export default function FeedbackScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Star Rating */}
+        {}
         <View style={styles.starsCard}>
           <Text style={styles.starsLabel}>How was the service?</Text>
           <View style={styles.starsRow}>
@@ -57,7 +57,7 @@ export default function FeedbackScreen({ navigation, route }) {
           </Text>
         </View>
 
-        {/* Review Input */}
+        {}
         <View style={styles.reviewCard}>
           <Text style={styles.reviewLabel}>📝 Leave a review (optional)</Text>
           <TextInput

@@ -1,31 +1,28 @@
-/**
- * BazaarAI — Agent 02: Context + Normalization Agent
- * Enriches intent data with geo-context, demand levels, weather impact
- */
+
 
 const DEMAND_CALENDAR = {
   'AC Repair': {
-    peak_months: [4, 5, 6, 7, 8], // April-August (summer)
+    peak_months: [4, 5, 6, 7, 8], 
     peak_multiplier: 1.4,
     off_multiplier: 0.8
   },
   'Plumbing': {
-    peak_months: [7, 8, 9], // Monsoon
+    peak_months: [7, 8, 9], 
     peak_multiplier: 1.3,
     off_multiplier: 0.9
   },
   'Electrician': {
-    peak_months: [6, 7, 8], // Summer load-shedding
+    peak_months: [6, 7, 8], 
     peak_multiplier: 1.2,
     off_multiplier: 1.0
   },
   'Painter': {
-    peak_months: [10, 11, 3, 4], // Spring/Autumn
+    peak_months: [10, 11, 3, 4], 
     peak_multiplier: 1.2,
     off_multiplier: 0.9
   },
   'Cleaning': {
-    peak_months: [3, 4], // Spring cleaning
+    peak_months: [3, 4], 
     peak_multiplier: 1.1,
     off_multiplier: 1.0
   }
@@ -61,12 +58,12 @@ function estimateDemandLevel(serviceType, requestedTime) {
     demandScore = serviceCalendar.off_multiplier;
   }
 
-  // Time-of-day adjustments
-  if (hour >= 9 && hour <= 11) demandScore *= 1.2; // Morning rush
-  if (hour >= 15 && hour <= 17) demandScore *= 1.15; // Afternoon peak
+  
+  if (hour >= 9 && hour <= 11) demandScore *= 1.2; 
+  if (hour >= 15 && hour <= 17) demandScore *= 1.15; 
 
-  // Weekend adjustment
-  if (dayOfWeek === 5 || dayOfWeek === 6) demandScore *= 1.1; // Friday-Saturday
+  
+  if (dayOfWeek === 5 || dayOfWeek === 6) demandScore *= 1.1; 
 
   let level = 'NORMAL';
   if (demandScore > 1.3) level = 'VERY_HIGH';
@@ -115,7 +112,7 @@ function runContextAgent(intentOutput, logger) {
 
   const { location, time, service_type } = intentOutput;
 
-  // Enrich location
+  
   let enrichedLocation = location;
   if (location) {
     const density = SECTOR_DENSITY[location.sector] || { density: 'MEDIUM', avg_income: 'MIDDLE' };
@@ -128,15 +125,15 @@ function runContextAgent(intentOutput, logger) {
     reasoning.push(`Location enriched: ${location.sector} → density=${density.density}, income=${density.avg_income}`);
   }
 
-  // Demand estimation
+  
   const demand = estimateDemandLevel(service_type, time?.timestamp);
   reasoning.push(`Demand level for "${service_type}": ${demand.level} (surge: ${demand.surge_multiplier}x) — ${demand.reason}`);
 
-  // Travel feasibility
+  
   const travelFeasibility = assessTravelFeasibility(location, time?.timestamp);
   reasoning.push(`Travel feasibility: ${travelFeasibility.feasible ? 'YES' : 'NO'}, estimated ${travelFeasibility.estimated_travel_time_min} min`);
 
-  // Weather impact simulation (Pakistan summers)
+  
   const month = new Date(time?.timestamp || Date.now()).getMonth() + 1;
   const weatherImpact = {
     season: month >= 4 && month <= 8 ? 'SUMMER' : month >= 7 && month <= 9 ? 'MONSOON' : 'WINTER',

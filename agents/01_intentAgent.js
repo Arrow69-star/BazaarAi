@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Agent 01: Intent Agent
- * Parses raw multilingual input (Urdu / Roman Urdu / English / Mixed)
- * Extracts structured service intent with confidence scoring
- */
+
 
 const SERVICE_KEYWORDS = {
   'AC Repair': ['ac', 'air condition', 'cooling', 'thanda', 'ठंडा', 'cool', 'compressor', 'gas fill', 'ac service', 'ac band', 'ac kharab', 'ac nahi chal', 'ac ka scene'],
@@ -76,7 +72,7 @@ function extractTime(text) {
     }
   }
 
-  // Normalize to timestamp
+  
   const now = new Date();
   if (timeResult.day === 'NOW') {
     timeResult.timestamp = now.toISOString();
@@ -98,7 +94,7 @@ function extractTime(text) {
 }
 
 function extractLocation(text) {
-  // Islamabad sector patterns: G-13, F-10, I-8, H-9, etc.
+  
   const sectorPattern = /([A-IFG]-\d{1,2})/gi;
   const sectors = text.match(sectorPattern);
 
@@ -119,7 +115,7 @@ function extractLocation(text) {
     return KNOWN_AREAS[key] || { sector: sectors[0], city: 'Islamabad', lat: 33.6844, lng: 73.0479 };
   }
 
-  // Check city names
+  
   if (text.toLowerCase().includes('rawalpindi') || text.toLowerCase().includes('pindi')) {
     return { sector: 'Rawalpindi', city: 'Rawalpindi', lat: 33.6007, lng: 73.0679 };
   }
@@ -127,7 +123,7 @@ function extractLocation(text) {
     return { sector: 'Islamabad', city: 'Islamabad', lat: 33.6844, lng: 73.0479 };
   }
 
-  return null; // Triggers clarification
+  return null; 
 }
 
 function calculateConfidence(service, location, timeInfo) {
@@ -135,7 +131,7 @@ function calculateConfidence(service, location, timeInfo) {
   let maxScore = 3;
 
   if (service.score > 0) score += 1;
-  if (service.score >= 2) score += 0.5; // Strong service match bonus
+  if (service.score >= 2) score += 0.5; 
   if (location) score += 1;
   if (timeInfo.raw.trim().length > 0) score += 0.5;
 
@@ -148,26 +144,26 @@ function runIntentAgent(rawText, logger) {
   const reasoning = [];
   reasoning.push(`Input received: "${rawText}"`);
 
-  // Language detection
+  
   const language = detectLanguage(rawText);
   reasoning.push(`Language detected: ${language}`);
 
-  // Service extraction
+  
   const { service, score: serviceScore } = extractService(rawText);
   reasoning.push(`Service keyword match: "${service}" (score: ${serviceScore})`);
 
-  // Time extraction
+  
   const timeInfo = extractTime(rawText);
   reasoning.push(`Time parsed: ${timeInfo.display} → ${timeInfo.timestamp}`);
 
-  // Location extraction
+  
   const location = extractLocation(rawText);
   reasoning.push(location
     ? `Location found: ${location.sector}, ${location.city}`
     : 'Location NOT found — will ask clarification'
   );
 
-  // Budget sensitivity
+  
   const lowerText = rawText.toLowerCase();
   let budgetPreference = 'NEUTRAL';
   for (const kw of BUDGET_KEYWORDS.LOW) {
@@ -180,14 +176,14 @@ function runIntentAgent(rawText, logger) {
   }
   reasoning.push(`Budget preference: ${budgetPreference}`);
 
-  // Urgency
+  
   let urgency = 'NORMAL';
   for (const kw of URGENCY_KEYWORDS.HIGH) {
     if (lowerText.includes(kw)) { urgency = 'HIGH'; break; }
   }
   reasoning.push(`Urgency level: ${urgency}`);
 
-  // Confidence score
+  
   const confidence = calculateConfidence({ score: serviceScore }, location, timeInfo);
   reasoning.push(`Confidence score: ${(confidence * 100).toFixed(0)}%`);
 
@@ -203,7 +199,7 @@ function runIntentAgent(rawText, logger) {
     needs_clarification: confidence < 0.8
   };
 
-  // Clarification questions if needed
+  
   if (output.needs_clarification) {
     output.clarification_questions = [];
     if (!service) output.clarification_questions.push('Aap kaunsi service chahte hain? (AC repair, plumber, electrician?)');
@@ -241,7 +237,7 @@ async function runIntentAgentAsync(rawText, logger) {
           clarification_questions: g.clarification_question ? [g.clarification_question] : [],
           keywords_detected: g.keywords_detected || [],
           ai_powered: true,
-          ai_model: 'gemini-1.5-flash',
+          ai_model: 'gemini-2.0-flash-lite',
         };
         logger.logAgentComplete('IntentAgent', output, `Gemini AI: ${output.service_type} @ ${output.location?.sector} conf=${output.confidence_score}`);
         return output;
@@ -250,7 +246,7 @@ async function runIntentAgentAsync(rawText, logger) {
       console.log('[IntentAgent] Gemini error, keyword fallback:', err.message);
     }
   }
-  // Keyword fallback
+  
   return runIntentAgent(rawText, logger);
 }
 

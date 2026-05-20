@@ -90,13 +90,13 @@ export default function AgentTraceScreen({ navigation }) {
         <Text style={styles.sub}>{entries.length} entries</Text>
       </View>
 
-      {/* DEV MODE badge */}
+      {}
       <View style={styles.devBadge}>
         <View style={styles.devDot} />
         <Text style={styles.devText}>DEV MODE — Live agent_trace.jsonl</Text>
       </View>
 
-      {/* Filter row */}
+      {}
       <View style={styles.filterRow}>
         {FILTERS.map(f => (
           <TouchableOpacity

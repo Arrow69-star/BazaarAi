@@ -1,12 +1,8 @@
-/**
- * BazaarAI — Gemini AI Service
- * Powers real NLP for intent extraction, decision explanation, and dispute resolution
- * Falls back to keyword-based logic if API key not set
- */
+
 
 const path = require('path');
 
-// Resolve from backend/node_modules since that's where it's installed
+
 let GoogleGenerativeAI;
 try {
   const backendPath = path.join(__dirname, '..', 'backend', 'node_modules', '@google', 'generative-ai');
@@ -26,17 +22,16 @@ let model = null;
 
 if (GoogleGenerativeAI && API_KEY && API_KEY !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(API_KEY);
-  // Try models in order (different API keys support different model names)
-  const MODEL_NAMES = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-pro', 'gemini-1.0-pro'];
+
+  // Use gemini-2.0-flash-lite (free tier) or gemini-2.0-flash as primary models
+  const MODEL_NAMES = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'];
   model = genAI.getGenerativeModel({ model: MODEL_NAMES[0] });
   console.log(`[Gemini] ✅ Connected — model: ${MODEL_NAMES[0]}`);
 } else {
   console.log('[Gemini] ⚠️  No API key — using keyword fallback');
 }
 
-/**
- * Extract structured intent from multilingual text using Gemini
- */
+
 async function geminiExtractIntent(rawText) {
   if (!model) return null;
 
@@ -71,18 +66,28 @@ Pakistani context clues:
   try {
     const result = await model.generateContent(prompt);
     const text = result.response.text().trim();
-    // Remove markdown code blocks if present
+
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     return JSON.parse(clean);
   } catch (err) {
     console.error('[Gemini] Intent extraction error:', err.message);
+    // Try fallback model on 404/quota errors
+    if (err.message.includes('404') || err.message.includes('not found')) {
+      try {
+        const fallback = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const result2 = await fallback.generateContent(prompt);
+        const text2 = result2.response.text().trim();
+        const clean2 = text2.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        return JSON.parse(clean2);
+      } catch (err2) {
+        console.error('[Gemini] Fallback model also failed:', err2.message);
+      }
+    }
     return null;
   }
 }
 
-/**
- * Generate human-readable explanation for provider selection
- */
+
 async function geminiExplainDecision(selectedProvider, rejectedProviders, intent) {
   if (!model) return null;
 
@@ -124,9 +129,7 @@ Return ONLY a JSON array of 4 strings (bullet points), no markdown:
   }
 }
 
-/**
- * Generate dynamic price justification
- */
+
 async function geminiJustifyPrice(pricing, provider, intent) {
   if (!model) return null;
 
@@ -151,9 +154,7 @@ Return ONLY a JSON string (one explanation sentence):
   }
 }
 
-/**
- * Generate dispute resolution message
- */
+
 async function geminiResolveDispute(disputeType, booking, resolution) {
   if (!model) return null;
 

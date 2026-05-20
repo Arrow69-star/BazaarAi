@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Master Orchestrator
- * Chains all 15 agents in strict execution order
- * Every step is logged via LoggingAgent
- */
+
 
 const { randomUUID } = require('crypto');
 
@@ -47,7 +43,7 @@ async function orchestrate(rawUserText, options = {}) {
   };
 
   try {
-    // ═══ STEP 1: INTENT (Gemini AI if key set, keyword fallback otherwise) ═══
+    
     console.log('▶ STEP 1: Intent Agent');
     const { isGeminiEnabled } = require('./geminiService');
     const intent = isGeminiEnabled()
@@ -67,17 +63,17 @@ async function orchestrate(rawUserText, options = {}) {
       return result;
     }
 
-    // ═══ STEP 2: CONTEXT ═══
+    
     console.log('▶ STEP 2: Context Agent');
     const context = runContextAgent(intent, logger);
     result.stages.context = context;
 
-    // ═══ STEP 3: COMPLEXITY ═══
+    
     console.log('▶ STEP 3: Complexity Classifier');
     const complexity = classifyComplexity(intent.service_type, rawUserText, logger);
     result.stages.complexity = complexity;
 
-    // ═══ STEP 4: PROVIDER DISCOVERY ═══
+    
     console.log('▶ STEP 4: Provider Discovery');
     const discovery = runProviderDiscoveryAgent(context, logger);
     result.stages.discovery = discovery;
@@ -90,30 +86,30 @@ async function orchestrate(rawUserText, options = {}) {
       return result;
     }
 
-    // ═══ STEP 5: MATCHING ENGINE ═══
+    
     console.log('▶ STEP 5: Matching Engine');
     const matching = runMatchingEngine(discovery, context, complexity, logger);
     result.stages.matching = matching;
 
-    // Attach top3 to context for pricing reference
+    
     context._top3_providers = matching.top3;
 
-    // ═══ STEP 6: SMART DECISION ═══
+    
     console.log('▶ STEP 6: Smart Decision Agent');
     const decision = runSmartDecisionAgent(matching, context, complexity, logger);
     result.stages.decision = decision;
 
-    // ═══ STEP 7: PRICING ═══
+    
     console.log('▶ STEP 7: Pricing Agent');
     const pricing = runPricingAgent(decision, context, complexity, logger);
     result.stages.pricing = pricing;
 
-    // ═══ STEP 8: SCHEDULING ═══
+    
     console.log('▶ STEP 8: Scheduling Agent');
     const scheduling = runSchedulingAgent(decision, context, complexity, logger);
     result.stages.scheduling = scheduling;
 
-    // ═══ STEP 9: BOOKING ═══
+    
     console.log('▶ STEP 9: Booking Agent');
     const booking = runBookingAgent(scheduling, decision, pricing, intent, sessionId, logger);
     result.stages.booking = booking;
@@ -123,22 +119,22 @@ async function orchestrate(rawUserText, options = {}) {
       result.stages.fallback_booking = fallback;
     }
 
-    // ═══ STEP 10: NOTIFICATIONS ═══
+    
     console.log('▶ STEP 10: Notification Agent');
     const notifications = runNotificationAgent(booking, logger);
     result.stages.notifications = notifications;
 
-    // ═══ STEP 11: LIVE SIMULATION ═══
+    
     console.log('▶ STEP 11: Live Service Simulation');
     const simulation = runLiveSimulationAgent(booking, logger);
     result.stages.simulation = simulation;
 
-    // ═══ STEP 12: FEEDBACK (Simulated) ═══
+    
     console.log('▶ STEP 12: Feedback Agent (Simulated)');
     const feedback = runFeedbackAgent(booking, null, null, logger);
     result.stages.feedback = feedback;
 
-    // ═══ AUTOMATIC 20% CANCELLATION (FAILURE INJECTION ENGINE) ═══
+    
     const cancelTriggered = Math.random() < 0.20 || options.simulateCancellation;
     if (cancelTriggered && matching.top3?.length > 1) {
       console.log('▶ ⚡ FAILURE INJECTION: Provider Cancelled (20% trigger)');
@@ -159,11 +155,11 @@ async function orchestrate(rawUserText, options = {}) {
       result.stages.dispute_price = priceDispute;
     }
 
-    // ═══ WHATSAPP SIMULATION ═══
+    
     const finalName = result.failure_simulation?.new_provider || decision.selected_provider?.name;
     result.stages.whatsapp_simulation = buildWhatsAppSim(finalName, booking, scheduling, pricing);
 
-    // ═══ CONFIDENCE BREAKDOWN ═══
+    
     result.confidence_breakdown = {
       intent: Math.round(intent.confidence_score * 100),
       location: intent.location ? 90 : 20,
@@ -172,7 +168,7 @@ async function orchestrate(rawUserText, options = {}) {
       overall: Math.round((intent.confidence_score * 0.4 + (intent.location ? 0.9 : 0.2) * 0.3 + 0.88 * 0.3) * 100)
     };
 
-    // ═══ REJECTED PROVIDERS (WHY NOT OTHERS) ═══
+    
     result.rejected_providers = (matching.ranked_providers || []).slice(1, 4).map(p => ({
       name: p.name,
       score: parseFloat((p.score?.total * 100).toFixed(1)),
@@ -181,7 +177,7 @@ async function orchestrate(rawUserText, options = {}) {
 
     const finalProviderName = result.failure_simulation?.new_provider || decision.selected_provider?.name;
 
-    // ═══ FINAL OUTPUT ═══
+    
     result.final_output = {
       service_request: {
         service: intent.service_type,

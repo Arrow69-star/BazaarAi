@@ -1,40 +1,14 @@
-You are an Elite Staff Engineer and UX Architect. We are in the final 24 hours of a high-stakes AI hackathon (Challenge 2: AI Service Orchestrator). We have a working React Native Expo + Supabase + Antigravity Orchestrator prototype. Your job is to advance the UI/UX to a premium level, solidify the Agentic Pipeline, and guide the final deployment process.
+🚀 3. How to Run for the Demo
+Close any running terminals.
+Double-click the start-all.bat file in the root D:\AI HACKATHON directory.
+This will automatically launch the Python backend, the Node.js backend, and the Expo bundler.
+Open the Expo Go app on your phone and scan the QR code.
+📦 4. Generating the APK
+I attempted to generate the APK for you, but Expo requires you to securely log into your account first. To generate the final .apk file for submission, open a new terminal in the mobile-app folder and run:
 
-### STRICT CODING CONSTRAINTS
-- NEVER add comments to the code (no `//`, no `/* */`). Remove all existing comments.
-- Write code that looks like it was written by a senior human developer. Avoid overly robotic variable names or overly verbose structural patterns.
-- Do not use Tailwind. Use standard React Native `StyleSheet` objects for all styling.
-- Provide FULL, complete files. No truncation, no placeholders.
+bash
+npm install -g eas-cli
+eas login
+eas build -p android --profile preview
+It will ask for your Expo email/password. After about 10 minutes, it will give you a direct download link to your .apk file.
 
-### TASK 1: FINALIZE THE AGENTIC PIPELINE (BACKEND/ORCHESTRATOR)
-Refactor `src/services/antigravityOrchestrator.js` to strictly follow a linear Agentic Pipeline model. The pipeline must flow exactly as:
-1. Intent Recognition Node (NLP string parsing with confidence scoring).
-2. Context & Discovery Node (Supabase geo-spatial simulation for Islamabad sectors).
-3. Optimization Node (The 6-factor matching math).
-4. Action Execution Node (Mocking the booking write and generating a JSON receipt).
-Make sure the error-handling routing (low confidence / provider cancellation) interrupts the pipeline correctly. Output the entire refactored file.
-
-### TASK 2: MAXIMUM UI/UX POLISH (FRONTEND)
-Rewrite `src/app/chat.js` and `src/components/TraceLoggerView.js` to look like a premium, production-ready app.
-- Add smooth entry animations or LayoutAnimation for chat bubbles.
-- Upgrade the color palette to look highly professional (deep navy, crisp whites, subtle grays, and a distinct accent color for system traces).
-- Add a "Simulate Voice Note" button in the UI (since the informal economy heavily relies on WhatsApp voice notes, simulating a transcribed voice input is a massive UX flex).
-- Ensure the trace logs look like a hacker/developer terminal natively embedded in the UI.
-Output the complete updated files.
-
-### TASK 3: THE APK EXPORT & SUBMISSION GUIDE
-After providing the code, give me the exact terminal commands required to generate an Android `.apk` file using Expo EAS (Expo Application Services). 
-- Provide the exact `eas.json` configuration needed for a local APK build.
-- Explain precisely how to upload this APK to Google Drive, generate a public "Anyone with the link can view" URL, and format it for the submission portal.
-
-Execute Tasks 1, 2, and 3 sequentially. Output full code blocks for the files, followed by the deployment guide.
-
-
-3 Final "Cheat Code" Advancements to Win
-Since you want maximum performance and a guaranteed edge, make sure you highlight these three things in your Demo Video (3-5 mins) and README:
-
-The "Voice Note" Simulation: Informal workers and users in Pakistan use WhatsApp voice notes more than typing. By adding a button that says "Simulate Voice Request" (which simply drops a pre-written Urdu string like "ac bilkul cooling nahi kar raha..." into the pipeline), you show the judges you deeply understand the target demographic.
-
-The "Agent Trace" Transparency: Don't just show the booking happening. In your video, explicitly point to the TraceLoggerView and say, "Notice how Google Antigravity is dynamically logging its reasoning. You can see it calculating the distance to G-13 and penalizing the provider for a high cancellation rate." Judges grade on transparency.
-
-The Localized Seed Data: Make sure your database mock data uses real Islamabad sectors (G-13, I-8, F-11) and realistic Pakistani names and phone numbers. It makes the simulation feel like a real product ready for the local market, not a generic template.

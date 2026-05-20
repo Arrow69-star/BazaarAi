@@ -1,10 +1,52 @@
+# ── Node ────────────────────────────────────────────────
 node_modules/
-.env
-logs/*.json
+npm-debug.log*
+yarn-error.log
+
+# ── Mobile App ───────────────────────────────────────────
 mobile-app/node_modules/
 mobile-app/.expo/
 mobile-app/dist/
-*.log
-.DS_Store
+mobile-app/web-build/
 
+# ── Python ───────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+python-agents/__pycache__/
+python-agents/**/__pycache__/
+
+# ── Logs & Runtime Data ──────────────────────────────────
+logs/
+python-agents/logs/
+python-agents/agents/logs/
+*.log
+*.jsonl
+
+# ── Secrets & Credentials ────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+service-account.json
+google-services.json
+GoogleService-Info.plist
+
+# ── Bookings DB (runtime data) ───────────────────────────
+python-agents/data/bookings.json
+logs/bookings_db.json
+
+# ── OS & Editor ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
 .vercel
+.idea/
+.vscode/settings.json
+
+# ── Build Artifacts ──────────────────────────────────────
+dist/
+build/
+*.apk
+*.aab

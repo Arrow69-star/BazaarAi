@@ -1,7 +1,4 @@
-/**
- * BazaarAI Backend — Express.js Server
- * REST API for the mobile app
- */
+
 
 require('dotenv').config();
 const express = require('express');
@@ -16,19 +13,19 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// ─── Import routes ───────────────────────────────────────────────
+
 const { orchestrate } = require('../agents/orchestrator');
 const LOGS_DIR = path.join(__dirname, '..', 'logs');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const BOOKINGS_FILE = path.join(LOGS_DIR, 'bookings_db.json');
 
-// ─── Request Logger Middleware ────────────────────────────────────
+
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
 
-// ─── Health Check ─────────────────────────────────────────────────
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'OK',
@@ -40,7 +37,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ─── MAIN: Full Pipeline ───────────────────────────────────────────
+
 app.post('/api/request', async (req, res) => {
   const { text, simulate_cancellation, simulate_price_dispute } = req.body;
 
@@ -63,7 +60,7 @@ app.post('/api/request', async (req, res) => {
   }
 });
 
-// ─── Providers List ────────────────────────────────────────────────
+
 app.get('/api/providers', (req, res) => {
   try {
     const providers = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'providers.json'), 'utf-8'));
@@ -79,7 +76,7 @@ app.get('/api/providers', (req, res) => {
   }
 });
 
-// ─── Booking by ID ─────────────────────────────────────────────────
+
 app.get('/api/bookings/:id', (req, res) => {
   try {
     if (!fs.existsSync(BOOKINGS_FILE)) return res.status(404).json({ error: 'No bookings found' });
@@ -92,7 +89,7 @@ app.get('/api/bookings/:id', (req, res) => {
   }
 });
 
-// ─── All Bookings ─────────────────────────────────────────────────
+
 app.get('/api/bookings', (req, res) => {
   try {
     if (!fs.existsSync(BOOKINGS_FILE)) return res.json({ bookings: [] });
@@ -103,7 +100,7 @@ app.get('/api/bookings', (req, res) => {
   }
 });
 
-// ─── Session Log ──────────────────────────────────────────────────
+
 app.get('/api/logs/:sessionId', (req, res) => {
   const logPath = path.join(LOGS_DIR, `${req.params.sessionId}.json`);
   if (!fs.existsSync(logPath)) return res.status(404).json({ error: 'Log not found' });
@@ -115,7 +112,7 @@ app.get('/api/logs/:sessionId', (req, res) => {
   }
 });
 
-// ─── Export All Logs as ZIP ───────────────────────────────────────
+
 app.get('/api/logs/export/zip', (req, res) => {
   if (!fs.existsSync(LOGS_DIR)) return res.status(404).json({ error: 'No logs directory' });
 
@@ -128,7 +125,7 @@ app.get('/api/logs/export/zip', (req, res) => {
   archive.finalize();
 });
 
-// ─── Dispute Endpoint ─────────────────────────────────────────────
+
 app.post('/api/dispute', async (req, res) => {
   const { booking_id, dispute_type, additional_info } = req.body;
 
@@ -160,7 +157,7 @@ app.post('/api/dispute', async (req, res) => {
   }
 });
 
-// ─── Demo Edge Cases ──────────────────────────────────────────────
+
 app.post('/api/demo/cancel-rebook', async (req, res) => {
   const { text } = req.body;
   const result = await orchestrate(text || 'Mujhe kal subah G-13 mein AC technician chahiye', {
@@ -177,7 +174,7 @@ app.post('/api/demo/price-dispute', async (req, res) => {
   res.json({ success: true, demo: 'PRICE_DISPUTE', result });
 });
 
-// ─── Upload to Google Cloud Storage ──────────────────────────────
+
 app.post('/api/gcs/upload', async (req, res) => {
   try {
     const keyFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -195,7 +192,7 @@ app.post('/api/gcs/upload', async (req, res) => {
     const storage = new Storage({ projectId, keyFilename: keyFile });
     const bucket = storage.bucket(bucketName);
 
-    // Ensure bucket exists
+    
     const [exists] = await bucket.exists();
     if (!exists) {
       await storage.createBucket(bucketName, { location: 'ASIA-SOUTH1' });
@@ -206,7 +203,7 @@ app.post('/api/gcs/upload', async (req, res) => {
       { local: path.join(DATA_DIR, 'providers.json'), remote: 'bazaarai/data/providers.json' },
     ];
 
-    // Add all log files
+    
     if (fs.existsSync(LOGS_DIR)) {
       fs.readdirSync(LOGS_DIR).filter(f => f.endsWith('.json')).forEach(f => {
         filesToUpload.push({ local: path.join(LOGS_DIR, f), remote: `bazaarai/logs/${f}` });
@@ -240,7 +237,7 @@ app.get('/api/gcs/files', async (req, res) => {
   }
 });
 
-// ─── Start Server ─────────────────────────────────────────────────
+
 app.listen(PORT, () => {
   console.log('\n╔══════════════════════════════════════════════════╗');
   console.log(`║  🧠 BazaarAI Backend running on port ${PORT}        ║`);

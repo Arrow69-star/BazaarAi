@@ -1,7 +1,4 @@
-/**
- * BazaarAI — Agent 12: Feedback Agent
- * Collects rating/review, updates provider reputation score
- */
+
 
 const fs = require('fs');
 const path = require('path');
@@ -26,7 +23,7 @@ function runFeedbackAgent(bookingOutput, userRating, userReview, logger) {
     rating: userRating
   });
 
-  // Default simulated feedback if none provided
+  
   const rating = userRating || (Math.random() > 0.3 ? (4 + Math.random()).toFixed(1) : (3 + Math.random()).toFixed(1));
   const review = userReview || generateSimulatedReview(bookingOutput.booking?.service_type, parseFloat(rating));
 
@@ -42,12 +39,12 @@ function runFeedbackAgent(bookingOutput, userRating, userReview, logger) {
     sentiment: parseFloat(rating) >= 4 ? 'POSITIVE' : parseFloat(rating) >= 3 ? 'NEUTRAL' : 'NEGATIVE'
   };
 
-  // Save feedback
+  
   const db = loadFeedbackDb();
   db.feedbacks.push(feedback);
   saveFeedbackDb(db);
 
-  // Update provider rating (simulated)
+  
   const ratingUpdate = updateProviderRating(feedback.provider_id, feedback.rating);
 
   const output = {
@@ -97,7 +94,7 @@ function updateProviderRating(providerId, newRating) {
     if (!provider) return null;
 
     const oldRating = provider.rating;
-    // Weighted average (simulate 50 previous reviews)
+    
     provider.rating = parseFloat(((oldRating * 50 + newRating) / 51).toFixed(2));
     fs.writeFileSync(PROVIDERS_PATH, JSON.stringify(providers, null, 2));
 

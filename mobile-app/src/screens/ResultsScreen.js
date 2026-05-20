@@ -31,7 +31,7 @@ export default function ResultsScreen({ navigation, route }) {
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0A0E1A', '#111827']} style={StyleSheet.absoluteFill} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>📊 Results</Text>
@@ -46,7 +46,7 @@ export default function ResultsScreen({ navigation, route }) {
         )}
       </View>
 
-      {/* Failure Story Banner */}
+      {}
       {failureSim?.triggered && (
         <View style={styles.failureBanner}>
           <Text style={styles.failureTitle}>⚠️ Provider Cancelled — Failure Simulation Active</Text>
@@ -59,7 +59,7 @@ export default function ResultsScreen({ navigation, route }) {
         </View>
       )}
 
-      {/* Tabs */}
+      {}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScroll}>
         <View style={styles.tabs}>
           {TABS.map(tab => (
@@ -76,7 +76,7 @@ export default function ResultsScreen({ navigation, route }) {
 
       <ScrollView style={styles.scroll} contentContainerStyle={{ padding: SPACING.base }}>
 
-        {/* ─── INTENT TAB ─── */}
+        {}
         {activeTab === 'Intent' && (
           <View>
             <SectionCard title="🧠 Extracted Intent">
@@ -117,7 +117,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ─── PROVIDERS TAB ─── */}
+        {}
         {activeTab === 'Providers' && (
           <View>
             <View style={styles.matchInsight}>
@@ -136,7 +136,7 @@ export default function ResultsScreen({ navigation, route }) {
               />
             ))}
 
-            {/* Why NOT others */}
+            {}
             {rejectedProviders.length > 0 && (
               <SectionCard title="❌ Why NOT Other Providers?">
                 {rejectedProviders.map((p, i) => (
@@ -153,7 +153,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ─── PRICING TAB ─── */}
+        {}
         {activeTab === 'Pricing' && (
           <View>
             <PricingBreakdown pricing={pricing} />
@@ -167,7 +167,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ─── DECISION TAB ─── */}
+        {}
         {activeTab === 'Decision' && (
           <View>
             <SectionCard title="💡 Why This Provider?">
@@ -194,7 +194,7 @@ export default function ResultsScreen({ navigation, route }) {
               </SectionCard>
             )}
 
-            {/* Failure Story */}
+            {}
             {failureSim?.triggered && (
               <SectionCard title="🔁 Failure Story Mode">
                 <View style={styles.storyStep}>
@@ -216,7 +216,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ─── WHATSAPP TAB ─── */}
+        {}
         {activeTab === 'WhatsApp' && (
           <View>
             <View style={styles.waInfo}>
@@ -228,7 +228,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* ─── LOGS TAB ─── */}
+        {}
         {activeTab === 'Logs' && (
           <View>
             <SectionCard title="📋 Antigravity Log Trace">
@@ -263,7 +263,7 @@ export default function ResultsScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Book Now CTA */}
+        {}
         <TouchableOpacity
           onPress={() => navigation.navigate('Booking', { result })}
           activeOpacity={0.9}

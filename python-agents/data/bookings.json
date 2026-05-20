@@ -51,6 +51,110 @@
       },
       "confirmation_message": "\u2705 Booking confirmed! Ali AC Services kal 09:00 bajay aayega. Booking ID: BK-20260519-MBPM",
       "created_at": "2026-05-19T22:06:07.606165"
+    },
+    {
+      "booking_id": "BK-20260520-MOAI",
+      "status": "CONFIRMED",
+      "provider": {
+        "id": "p001",
+        "name": "Ali AC Services",
+        "phone": "+92-300-1234567",
+        "rating": 4.7,
+        "distance_km": 0.0,
+        "specialization": "AC Specialist"
+      },
+      "service": "AC Repair",
+      "location": "G-13",
+      "time_slot": "09:00",
+      "time_preference": "tomorrow morning (9 AM)",
+      "pricing": {
+        "base_fee": 1000,
+        "distance_fee": 0,
+        "urgency_fee": 0,
+        "surge_multiplier": 1.0,
+        "total_pkr": 1000,
+        "currency": "PKR"
+      },
+      "confirmation_message": "\u2705 Booking confirmed! Ali AC Services kal 09:00 bajay aayega. Booking ID: BK-20260520-MOAI",
+      "created_at": "2026-05-20T10:12:01.127971"
+    },
+    {
+      "booking_id": "BK-20260520-5Q1W",
+      "status": "CONFIRMED",
+      "provider": {
+        "id": "p005",
+        "name": "Bilal Electric Co",
+        "phone": "+92-304-5678901",
+        "rating": 4.8,
+        "distance_km": 0.58,
+        "specialization": "Electrical Wiring Specialist"
+      },
+      "service": "Electrician",
+      "location": "G-11",
+      "time_slot": "09:00",
+      "time_preference": "today",
+      "pricing": {
+        "base_fee": 900,
+        "distance_fee": 9,
+        "urgency_fee": 300,
+        "surge_multiplier": 1.3,
+        "total_pkr": 1572,
+        "currency": "PKR"
+      },
+      "confirmation_message": "\u2705 Booking confirmed! Bilal Electric Co kal 09:00 bajay aayega. Booking ID: BK-20260520-5Q1W",
+      "created_at": "2026-05-20T10:28:33.853672"
+    },
+    {
+      "booking_id": "BK-20260520-HJCM",
+      "status": "CONFIRMED",
+      "provider": {
+        "id": "p004",
+        "name": "Hassan Plumbing Works",
+        "phone": "+92-303-4567890",
+        "rating": 4.6,
+        "distance_km": 2.75,
+        "specialization": "Pipe Specialist"
+      },
+      "service": "Plumbing",
+      "location": "F-10",
+      "time_slot": "08:00",
+      "time_preference": "today",
+      "pricing": {
+        "base_fee": 700,
+        "distance_fee": 41,
+        "urgency_fee": 0,
+        "surge_multiplier": 1.0,
+        "total_pkr": 741,
+        "currency": "PKR"
+      },
+      "confirmation_message": "\u2705 Booking confirmed! Hassan Plumbing Works kal 08:00 bajay aayega. Booking ID: BK-20260520-HJCM",
+      "created_at": "2026-05-20T10:29:13.132899"
+    },
+    {
+      "booking_id": "BK-20260520-1MTN",
+      "status": "CONFIRMED",
+      "provider": {
+        "id": "p004",
+        "name": "Hassan Plumbing Works",
+        "phone": "+92-303-4567890",
+        "rating": 4.6,
+        "distance_km": 2.75,
+        "specialization": "Pipe Specialist"
+      },
+      "service": "Plumbing",
+      "location": "F-10",
+      "time_slot": "08:00",
+      "time_preference": "today",
+      "pricing": {
+        "base_fee": 700,
+        "distance_fee": 41,
+        "urgency_fee": 0,
+        "surge_multiplier": 1.0,
+        "total_pkr": 741,
+        "currency": "PKR"
+      },
+      "confirmation_message": "\u2705 Booking confirmed! Hassan Plumbing Works kal 08:00 bajay aayega. Booking ID: BK-20260520-1MTN",
+      "created_at": "2026-05-20T10:30:12.543158"
     }
   ]
 }

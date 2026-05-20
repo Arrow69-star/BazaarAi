@@ -1,7 +1,4 @@
-/**
- * BazaarAI — Agent 14: Fallback Handling Agent
- * Handles: no providers, API failure, unclear input, all edge cases
- */
+
 
 function runFallbackAgent(stage, error, context, logger) {
   logger.logAgentStart('FallbackAgent', { stage, error: error?.message || error });

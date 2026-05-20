@@ -20,7 +20,7 @@ export default function ConfidenceCard({ confidence }) {
     <View style={styles.container}>
       <Text style={styles.title}>📊 Confidence Breakdown</Text>
 
-      {/* Overall ring */}
+      {}
       <View style={styles.overallRow}>
         <View style={[styles.overallRing, { borderColor: overallColor }]}>
           <Text style={[styles.overallPct, { color: overallColor }]}>{overall}%</Text>

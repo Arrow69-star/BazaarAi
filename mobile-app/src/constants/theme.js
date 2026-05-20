@@ -1,4 +1,4 @@
-// BazaarAI Design System — Dark Premium Theme
+
 export const COLORS = {
   background: '#0A0E1A',
   surface: '#111827',

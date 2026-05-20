@@ -1,10 +1,6 @@
-/**
- * BazaarAI — Agent 07: Dynamic Pricing Agent
- * Calculates total price with full itemized breakdown
- * price = base_fee + distance_cost + urgency_fee + complexity_cost + demand_surge - discount
- */
 
-const DISTANCE_RATE_PER_KM = 15; // PKR per km
+
+const DISTANCE_RATE_PER_KM = 15; 
 
 const URGENCY_FEES = {
   HIGH: { fee: 300, label: 'Emergency/Urgent Fee' },
@@ -19,9 +15,9 @@ const DEMAND_SURGE_RATES = {
 };
 
 const BUDGET_DISCOUNTS = {
-  LOW: 0.10,   // 10% off for budget-sensitive users
+  LOW: 0.10,   
   NEUTRAL: 0,
-  HIGH: 0      // premium users pay full price
+  HIGH: 0      
 };
 
 function runPricingAgent(decisionOutput, contextOutput, complexityOutput, logger) {
@@ -40,42 +36,42 @@ function runPricingAgent(decisionOutput, contextOutput, complexityOutput, logger
     return { error: 'No provider for pricing' };
   }
 
-  // 1. Base fee
+  
   const baseFee = provider.price_base;
   reasoning.push(`Base fee: PKR ${baseFee} (from provider's listed rate)`);
 
-  // 2. Complexity cost
+  
   const complexityMultiplier = complexityOutput.price_multiplier || 1.0;
   const complexityCost = Math.round((baseFee * complexityMultiplier) - baseFee);
   reasoning.push(`Complexity (${complexityOutput.level}): +PKR ${complexityCost} (×${complexityMultiplier})`);
 
-  // 3. Distance cost
+  
   const distanceCost = Math.round(provider.distance_km * DISTANCE_RATE_PER_KM);
   reasoning.push(`Distance cost: ${provider.distance_km}km × PKR ${DISTANCE_RATE_PER_KM} = PKR ${distanceCost}`);
 
-  // 4. Urgency fee
+  
   const urgencyConfig = URGENCY_FEES[contextOutput.urgency] || URGENCY_FEES.NORMAL;
   const urgencyFee = urgencyConfig.fee;
   if (urgencyFee > 0) reasoning.push(`Urgency fee: +PKR ${urgencyFee} (${contextOutput.urgency} urgency)`);
 
-  // 5. Demand surge
+  
   const surgeRate = DEMAND_SURGE_RATES[contextOutput.demand?.level] || 1.0;
   const surgeAmount = Math.round((baseFee + complexityCost + distanceCost) * (surgeRate - 1));
   if (surgeAmount > 0) reasoning.push(`Demand surge (${contextOutput.demand?.level}): +PKR ${surgeAmount} (×${surgeRate})`);
 
-  // 6. Subtotal before discount
+  
   const subtotal = baseFee + complexityCost + distanceCost + urgencyFee + surgeAmount;
 
-  // 7. Budget discount
+  
   const discountRate = BUDGET_DISCOUNTS[contextOutput.budget_preference] || 0;
   const discountAmount = Math.round(subtotal * discountRate);
   if (discountAmount > 0) reasoning.push(`Budget discount (${(discountRate * 100).toFixed(0)}%): -PKR ${discountAmount}`);
 
-  // 8. Final total
+  
   const total = subtotal - discountAmount;
   reasoning.push(`TOTAL: PKR ${total}`);
 
-  // Budget-friendly alternative (cheapest available provider from top3)
+  
   const allTop3 = contextOutput._top3_providers || [];
   const budgetAlt = findBudgetAlternative(allTop3, provider, total);
 
@@ -107,14 +103,14 @@ function runPricingAgent(decisionOutput, contextOutput, complexityOutput, logger
 }
 
 function findBudgetAlternative(top3, selectedProvider, currentTotal) {
-  // Find a cheaper option from remaining providers
+  
   const others = top3.filter(p => p.id !== selectedProvider.id);
   if (others.length === 0) return null;
 
   const cheapest = others.sort((a, b) => a.price_base - b.price_base)[0];
   if (!cheapest) return null;
 
-  const altTotal = Math.round(cheapest.price_base * 0.85); // simplified estimate
+  const altTotal = Math.round(cheapest.price_base * 0.85); 
   const savings = currentTotal - altTotal;
 
   return {

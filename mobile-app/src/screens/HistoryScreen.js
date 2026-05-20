@@ -24,7 +24,7 @@ export default function BookingHistoryScreen({ navigation }) {
   const fetchBookings = async () => {
     try {
       const data = await getAllBookings();
-      // Sort newest first
+      
       const sorted = (data.bookings || []).sort((a, b) =>
         new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );

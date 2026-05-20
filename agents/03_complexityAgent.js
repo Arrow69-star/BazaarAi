@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Agent 03: Job Complexity Classifier
- * Classifies job complexity: basic | intermediate | complex
- * Affects pricing and technician selection
- */
+
 
 const COMPLEXITY_RULES = {
   'AC Repair': [
@@ -100,7 +96,7 @@ function classifyComplexity(serviceType, issueDescription, logger) {
   let matchedRule = null;
   let highestPriority = -1;
 
-  // Check complex first (highest priority), then intermediate, then basic
+  
   for (const rule of [...rules].reverse()) {
     for (const keyword of rule.keywords) {
       if (lowerText.includes(keyword)) {
@@ -115,9 +111,9 @@ function classifyComplexity(serviceType, issueDescription, logger) {
     }
   }
 
-  // Default to basic if no match
+  
   if (!matchedRule) {
-    matchedRule = rules[0]; // basic
+    matchedRule = rules[0]; 
     reasoning.push('No specific complexity keywords matched → defaulting to basic');
   }
 

@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Agent 13: Dispute Agent 🔥 WINNING EDGE
- * Handles: late arrival, overpricing, bad service, cancellation, no-show
- * Simulates: refund, auto-rebooking, escalation
- */
+
 
 const DISPUTE_TYPES = {
   CANCELLATION: 'Provider cancelled booking',
@@ -35,7 +31,7 @@ const RESOLUTION_POLICIES = {
   OVERPRICING: {
     action: 'PRICE_REVIEW_AND_REFUND',
     compensation: 'Refund of overcharged amount',
-    refund_percent: 0, // calculated based on overcharge
+    refund_percent: 0, 
     sla_hours: 48
   },
   BAD_SERVICE: {

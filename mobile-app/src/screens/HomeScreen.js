@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }) {
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Glowing orb background */}
+      {}
       <View style={styles.orb1} />
       <View style={styles.orb2} />
 
@@ -53,7 +53,7 @@ export default function HomeScreen({ navigation }) {
       >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-          {/* Header */}
+          {}
           <View style={styles.header}>
             <LinearGradient colors={['#6C63FF22', '#22D3EE11']} style={styles.logoBadge}>
               <Text style={styles.logoEmoji}>🧠</Text>
@@ -66,7 +66,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Input Box */}
+          {}
           <View style={[styles.inputCard, SHADOWS.primary]}>
             <Text style={styles.inputLabel}>🗣️ Apni request likhein (Urdu / Roman Urdu / English)</Text>
             <TextInput
@@ -85,7 +85,7 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Example Prompts */}
+          {}
           <Text style={styles.sectionLabel}>💬 Example Requests</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
             {EXAMPLE_PROMPTS.map((prompt, i) => (
@@ -101,7 +101,7 @@ export default function HomeScreen({ navigation }) {
             ))}
           </ScrollView>
 
-          {/* Edge Case Buttons */}
+          {}
           <Text style={styles.sectionLabel}>🧪 Demo Edge Cases</Text>
           <View style={styles.edgeRow}>
             <TouchableOpacity
@@ -131,7 +131,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Submit Button */}
+          {}
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <TouchableOpacity onPress={handleSubmit} activeOpacity={0.9} disabled={!text.trim()}>
               <LinearGradient
@@ -145,7 +145,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
           </Animated.View>
 
-          {/* Agent badges */}
+          {}
           <View style={styles.agentsRow}>
             {['🧠', '🌍', '⚙️', '🔍', '🎯', '💡', '💰', '📅', '✅', '🔔'].map((em, i) => (
               <View key={i} style={styles.agentBadge}>

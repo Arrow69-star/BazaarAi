@@ -2,11 +2,11 @@ import React, { useRef, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 
 const STATUS_COLORS = {
-  RUNNING: '#F59E0B',
-  DONE:    '#10B981',
-  WARNING: '#F97316',
-  ERROR:   '#EF4444',
-  ALERT:   '#EF4444',
+  RUNNING: '#FFD166',
+  DONE:    '#06D6A0',
+  WARNING: '#FF9F1C',
+  ERROR:   '#EF476F',
+  ALERT:   '#EF476F',
 };
 
 export function TraceLoggerView({ logs = [] }) {
@@ -17,22 +17,22 @@ export function TraceLoggerView({ logs = [] }) {
     <View style={styles.wrapper}>
       <View style={styles.header}>
         <View style={styles.dot} />
-        <Text style={styles.title}>ANTIGRAVITY RUNTIME EXECUTION TRACE</Text>
-        <Text style={styles.count}>{logs.length} steps</Text>
+        <Text style={styles.title}>ANTIGRAVITY ORCHESTRATOR TERMINAL</Text>
+        <Text style={styles.count}>[ {logs.length} ops ]</Text>
       </View>
-      <ScrollView ref={scrollRef} style={styles.scroll} nestedScrollEnabled showsVerticalScrollIndicator={false}>
+      <ScrollView ref={scrollRef} style={styles.scroll} nestedScrollEnabled showsVerticalScrollIndicator={true} indicatorStyle="white">
         {logs.map((log, i) => (
           <View key={i} style={styles.row}>
-            <Text style={styles.index}>{String(i+1).padStart(2,'0')}</Text>
-            <View style={[styles.statusDot, { backgroundColor: STATUS_COLORS[log.status] || '#64748B' }]} />
+            <Text style={styles.index}>{String(i+1).padStart(3,'0')}</Text>
+            <View style={[styles.statusDot, { backgroundColor: STATUS_COLORS[log.status] || '#78909C' }]} />
             <View style={styles.content}>
-              <Text style={styles.step}>{log.step}</Text>
+              <Text style={styles.step}>[{log.step.toUpperCase()}]</Text>
               <Text style={styles.msg}>{log.message}</Text>
             </View>
           </View>
         ))}
         {logs.length === 0 && (
-          <Text style={styles.empty}>Awaiting orchestration pipeline...</Text>
+          <Text style={styles.empty}>SYSTEM IDLE. AWAITING INPUT STREAM...</Text>
         )}
       </ScrollView>
     </View>
@@ -40,17 +40,17 @@ export function TraceLoggerView({ logs = [] }) {
 }
 
 const styles = StyleSheet.create({
-  wrapper:  { height: 200, backgroundColor:'#0D1117', borderTopWidth:1, borderColor:'#21262D' },
-  header:   { flexDirection:'row', alignItems:'center', paddingHorizontal:12, paddingVertical:6, borderBottomWidth:1, borderColor:'#21262D' },
-  dot:      { width:6, height:6, borderRadius:3, backgroundColor:'#10B981', marginRight:8 },
-  title:    { flex:1, color:'#58A6FF', fontSize:10, fontWeight:'700', letterSpacing:1 },
-  count:    { color:'#6E7681', fontSize:10 },
-  scroll:   { flex:1, paddingHorizontal:8 },
-  row:      { flexDirection:'row', alignItems:'flex-start', paddingVertical:4, borderBottomWidth:1, borderColor:'#161B22' },
-  index:    { color:'#6E7681', fontSize:10, fontFamily:'monospace', width:22 },
-  statusDot:{ width:6, height:6, borderRadius:3, marginTop:3, marginRight:6 },
-  content:  { flex:1 },
-  step:     { color:'#3FB950', fontSize:10, fontWeight:'700' },
-  msg:      { color:'#C9D1D9', fontSize:10, lineHeight:14 },
-  empty:    { color:'#6E7681', fontSize:11, textAlign:'center', marginTop:20, fontStyle:'italic' },
+  wrapper:  { height: 220, backgroundColor:'#000000', borderTopWidth:2, borderColor:'#00E676' },
+  header:   { flexDirection:'row', alignItems:'center', paddingHorizontal:16, paddingVertical:10, backgroundColor:'#111111', borderBottomWidth:1, borderColor:'#333333' },
+  dot:      { width:8, height:8, borderRadius:4, backgroundColor:'#00E676', marginRight:12, shadowColor:'#00E676', shadowOffset:{width:0,height:0}, shadowOpacity:0.8, shadowRadius:4, elevation:4 },
+  title:    { flex:1, color:'#FFFFFF', fontSize:11, fontWeight:'800', letterSpacing:2, fontFamily: 'monospace' },
+  count:    { color:'#00E676', fontSize:11, fontFamily: 'monospace', fontWeight:'700' },
+  scroll:   { flex:1, paddingHorizontal:12, paddingVertical:8 },
+  row:      { flexDirection:'row', alignItems:'flex-start', paddingVertical:6 },
+  index:    { color:'#555555', fontSize:11, fontFamily:'monospace', width:30 },
+  statusDot:{ width:8, height:8, borderRadius:0, marginTop:4, marginRight:10 },
+  content:  { flex:1, flexDirection:'row', flexWrap:'wrap' },
+  step:     { color:'#00E676', fontSize:11, fontWeight:'700', fontFamily:'monospace', marginRight:8 },
+  msg:      { color:'#DDDDDD', fontSize:11, lineHeight:16, fontFamily:'monospace' },
+  empty:    { color:'#555555', fontSize:12, textAlign:'center', marginTop:30, fontFamily:'monospace', letterSpacing:1 },
 });

@@ -1,28 +1,23 @@
-/**
- * BazaarAI — Agent 05: Matching Engine
- * Weighted multi-factor scoring — NOT just closest provider
- * score = distance(20%) + availability(20%) + rating(15%) +
- *         reliability(15%) + specialization(10%) + price_fit(10%) + low_cancellation(10%)
- */
+
 
 function normalizeDistance(distanceKm, maxKm = 15) {
-  // Closer = higher score (invert and normalize 0–1)
+  
   return Math.max(0, 1 - distanceKm / maxKm);
 }
 
 function normalizeRating(rating, maxRating = 5) {
-  return (rating - 3) / (maxRating - 3); // 3.0 = 0, 5.0 = 1
+  return (rating - 3) / (maxRating - 3); 
 }
 
 function normalizePrice(priceBase, userBudget, maxPrice = 2000) {
   if (userBudget === 'LOW') {
-    // Penalize expensive providers heavily
+    
     return Math.max(0, 1 - priceBase / maxPrice);
   } else if (userBudget === 'HIGH') {
-    // Slightly prefer mid-high price (quality signal)
+    
     return priceBase / maxPrice;
   }
-  // Neutral: moderate price is best
+  
   const ideal = 900;
   return 1 - Math.abs(priceBase - ideal) / maxPrice;
 }
@@ -31,16 +26,16 @@ function scoreSpecialization(provider, serviceType, complexityLevel) {
   const spec = provider.specialization?.toLowerCase() || '';
   const service = serviceType?.toLowerCase() || '';
 
-  // Exact specialist match
+  
   if (spec.includes('specialist') && spec.includes(service.split(' ')[0])) return 1.0;
-  // AC specialist for AC repair
+  
   if (service.includes('ac') && spec.includes('ac')) return 1.0;
-  // General technician
+  
   if (spec.includes('general')) return 0.5;
-  // Complex job needs specialist
+  
   if (complexityLevel === 'complex' && !spec.includes('specialist')) return 0.2;
 
-  return 0.6; // partial match
+  return 0.6; 
 }
 
 function calculateWeightedScore(provider, contextOutput, complexityLevel) {
@@ -52,7 +47,7 @@ function calculateWeightedScore(provider, contextOutput, complexityLevel) {
   const reliabilityScore = provider.reliability_score;
   const specializationScore = scoreSpecialization(provider, contextOutput.service_type, complexityLevel);
   const priceScore = normalizePrice(provider.price_base, budget_preference);
-  const cancellationScore = 1 - provider.cancellation_rate; // lower rate = higher score
+  const cancellationScore = 1 - provider.cancellation_rate; 
 
   const weights = {
     distance: 0.20,
@@ -102,19 +97,19 @@ function runMatchingEngine(discoveryOutput, contextOutput, complexityOutput, log
     return { top3: [], ranked_providers: [], ranking_reasoning: [] };
   }
 
-  // Score every provider
+  
   const scored = providers.map(p => {
     const scoreResult = calculateWeightedScore(p, contextOutput, complexityOutput.level);
     return { ...p, score: scoreResult };
   });
 
-  // Sort by total score descending
+  
   scored.sort((a, b) => b.score.total - a.score.total);
 
   reasoning.push(`Ranked ${scored.length} providers by weighted score`);
   reasoning.push(`Top scorer: ${scored[0].name} (score: ${scored[0].score.total})`);
 
-  // Compare top vs closest — key differentiator
+  
   const closestProvider = [...providers].sort((a, b) => a.distance_km - b.distance_km)[0];
   const topProvider = scored[0];
 

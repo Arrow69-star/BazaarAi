@@ -1,8 +1,4 @@
-/**
- * BazaarAI — Agent 06: Smart Decision Agent
- * Makes final provider selection with full human-readable explanation
- * "Why this provider over the closer/cheaper one"
- */
+
 
 function runSmartDecisionAgent(matchingOutput, contextOutput, complexityOutput, logger) {
   logger.logAgentStart('SmartDecisionAgent', {
@@ -22,16 +18,16 @@ function runSmartDecisionAgent(matchingOutput, contextOutput, complexityOutput, 
   const winner = top3[0];
   const runner_up = top3[1] || null;
 
-  // Build decision explanation
+  
   const explanation = buildExplanation(winner, runner_up, closest_provider, smart_match_applied, contextOutput, complexityOutput);
   reasoning.push(`Selected: ${winner.name} with score ${winner.score.total}`);
   reasoning.push(explanation.short_reason);
 
-  // Risk assessment
+  
   const risk = assessRisk(winner);
   reasoning.push(`Risk assessment: ${risk.level} — ${risk.notes.join(', ')}`);
 
-  // Confidence in decision
+  
   const decisionConfidence = computeDecisionConfidence(top3);
   reasoning.push(`Decision confidence: ${(decisionConfidence * 100).toFixed(0)}%`);
 
@@ -67,7 +63,7 @@ function buildExplanation(winner, runnerUp, closestName, smartMatch, context, co
 
   const detailedReasons = [];
 
-  // Why NOT closest?
+  
   if (smartMatch && closestName !== winner.name) {
     detailedReasons.push(
       `🎯 NOT choosing closest provider "${closestName}" — ${winner.name} is ${winner.distance_km}km away ` +
@@ -76,7 +72,7 @@ function buildExplanation(winner, runnerUp, closestName, smartMatch, context, co
     );
   }
 
-  // Rating strength
+  
   if (winner.rating >= 4.6) {
     detailedReasons.push(
       `⭐ Top-rated: ${winner.rating}/5.0 from verified customer reviews ` +
@@ -84,22 +80,22 @@ function buildExplanation(winner, runnerUp, closestName, smartMatch, context, co
     );
   }
 
-  // Budget match
+  
   if (context.budget_preference === 'LOW' && winner.price_base <= 900) {
     detailedReasons.push(`💰 Budget-friendly: PKR ${winner.price_base} base fee (within low budget preference)`);
   }
 
-  // Specialization
+  
   if (winner.specialization?.toLowerCase().includes('specialist')) {
     detailedReasons.push(`🔧 Specialist technician: "${winner.specialization}" — ideal for ${complexity.level} complexity job`);
   }
 
-  // Reliability
+  
   if (winner.reliability_score >= 0.90) {
     detailedReasons.push(`✅ High reliability: ${(winner.reliability_score * 100).toFixed(0)}% success rate with ${winner.experience_years} years experience`);
   }
 
-  // Score gap over runner-up
+  
   if (runnerUp) {
     detailedReasons.push(
       `📊 Score gap over runner-up "${runnerUp.name}": +${scoreGap} points ` +
@@ -142,7 +138,7 @@ function assessRisk(provider) {
 function computeDecisionConfidence(top3) {
   if (top3.length < 2) return 0.95;
   const gap = top3[0].score.total - top3[1].score.total;
-  // Large gap = high confidence
+  
   return Math.min(0.99, 0.7 + gap * 2);
 }
 

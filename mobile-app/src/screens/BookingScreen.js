@@ -22,7 +22,7 @@ export default function BookingScreen({ navigation, route }) {
       <ScrollView contentContainerStyle={styles.scroll}>
         <BookingReceipt receipt={receipt} booking={booking} />
 
-        {/* Notifications Preview */}
+        {}
         {stages.notifications?.notifications_sent?.length > 0 && (
           <View style={styles.notifCard}>
             <Text style={styles.notifTitle}>🔔 Notifications Sent</Text>
@@ -37,7 +37,7 @@ export default function BookingScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Dispute Button */}
+        {}
         <View style={styles.disputeSection}>
           <Text style={styles.disputeLabel}>⚖️ Issue with this booking?</Text>
           <View style={styles.disputeButtons}>

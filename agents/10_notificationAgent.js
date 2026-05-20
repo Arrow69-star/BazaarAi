@@ -1,7 +1,4 @@
-/**
- * BazaarAI — Agent 10: Notification Agent
- * Simulates SMS/push notifications: confirmation, reminder, en-route
- */
+
 
 function runNotificationAgent(bookingOutput, logger) {
   logger.logAgentStart('NotificationAgent', {
@@ -16,7 +13,7 @@ function runNotificationAgent(bookingOutput, logger) {
 
   const { booking } = bookingOutput;
   const slotTime = new Date(booking.schedule.slot_start);
-  const reminderTime = new Date(slotTime.getTime() - 60 * 60000); // 1 hour before
+  const reminderTime = new Date(slotTime.getTime() - 60 * 60000); 
 
   const notifications = [
     {

@@ -1,20 +1,16 @@
-/**
- * BazaarAI — Agent 15: Logging Agent
- * The foundation agent — called by ALL other agents
- * Stores full trace: plan, reasoning, tool calls, decisions, errors
- */
+
 
 const fs = require('fs');
 const path = require('path');
 
-// On Vercel serverless, use /tmp for ephemeral writes; locally use /logs
+
 const LOG_DIR = process.env.VERCEL
   ? path.join('/tmp', 'bazaarai_logs')
   : path.join(__dirname, '..', 'logs');
 
 try {
   if (!fs.existsSync(LOG_DIR)) fs.mkdirSync(LOG_DIR, { recursive: true });
-} catch (e) { /* ignore if can't create */ }
+} catch (e) {  }
 
 class LoggingAgent {
   constructor(sessionId) {
@@ -63,7 +59,7 @@ class LoggingAgent {
       output: output,
       reasoning: reasoning
     };
-    // Update agent status
+    
     const agent = this.log.agents_used.find(a => a.name === agentName);
     if (agent) agent.completed_at = entry.timestamp;
     this.log.reasoning_steps.push(entry);

@@ -23,7 +23,7 @@ export default function TrackingScreen({ navigation, route }) {
       <StatusBar barStyle="light-content" />
       <LinearGradient colors={['#0A0E1A', '#111827']} style={StyleSheet.absoluteFill} />
 
-      {/* Header */}
+      {}
       <View style={styles.header}>
         <Text style={styles.title}>📡 Live Tracking</Text>
         <View style={styles.liveBadge}>
@@ -34,7 +34,7 @@ export default function TrackingScreen({ navigation, route }) {
 
       <ScrollView contentContainerStyle={styles.scroll}>
 
-        {/* Dispute Resolution Card */}
+        {}
         {dispute && (
           <View style={styles.disputeCard}>
             <Text style={styles.disputeTitle}>⚖️ Dispute Resolution Active</Text>
@@ -57,7 +57,7 @@ export default function TrackingScreen({ navigation, route }) {
           </View>
         )}
 
-        {/* Map Placeholder */}
+        {}
         <View style={styles.mapBox}>
           <LinearGradient colors={['#1E2A3B', '#162032']} style={styles.mapGradient}>
             <Text style={styles.mapEmoji}>🗺️</Text>
@@ -76,7 +76,7 @@ export default function TrackingScreen({ navigation, route }) {
           </LinearGradient>
         </View>
 
-        {/* Timeline */}
+        {}
         <View style={styles.timelineCard}>
           <Text style={styles.timelineTitle}>📋 Service Timeline</Text>
           {simStages.length === 0 && (
@@ -118,7 +118,7 @@ export default function TrackingScreen({ navigation, route }) {
           })}
         </View>
 
-        {/* Edge Case: Demo Dispute Buttons */}
+        {}
         <View style={styles.edgeCard}>
           <Text style={styles.edgeTitle}>🧪 Simulate Edge Cases</Text>
           <View style={styles.edgeRow}>
@@ -139,7 +139,7 @@ export default function TrackingScreen({ navigation, route }) {
           </View>
         </View>
 
-        {/* CTA */}
+        {}
         <TouchableOpacity onPress={() => navigation.navigate('Feedback', { result })} activeOpacity={0.9}>
           <LinearGradient colors={['#6C63FF', '#4F46E5']} style={styles.rateBtn}>
             <Text style={styles.rateBtnText}>⭐  Rate Your Service →</Text>

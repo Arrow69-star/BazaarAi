@@ -13,6 +13,7 @@ import TrackingScreen   from './src/screens/TrackingScreen';
 import FeedbackScreen   from './src/screens/FeedbackScreen';
 import HistoryScreen    from './src/screens/HistoryScreen';
 import AgentTraceScreen from './src/screens/AgentTraceScreen';
+import LoadingScreen    from './src/components/LoadingScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
@@ -56,6 +57,12 @@ function HomeTabs() {
 }
 
 export default function App() {
+  const [appIsReady, setAppIsReady] = React.useState(false);
+
+  if (!appIsReady) {
+    return <LoadingScreen onFinish={() => setAppIsReady(true)} />;
+  }
+
   return (
     <NavigationContainer>
       <StatusBar style="light" />

@@ -17,7 +17,7 @@ export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Header */}
+        {}
         <View style={styles.heroSection}>
           <Text style={styles.logo}>🧠</Text>
           <Text style={styles.title}>BazaarAI</Text>
@@ -29,7 +29,7 @@ export default function WelcomeScreen() {
           </View>
         </View>
 
-        {/* Stats */}
+        {}
         <View style={styles.statsRow}>
           {[['5', 'AI Agents'],['6','Ranking Factors'],['15+','Providers'],['3','Languages']].map(([v,l]) => (
             <View key={l} style={styles.stat}>
@@ -39,12 +39,12 @@ export default function WelcomeScreen() {
           ))}
         </View>
 
-        {/* CTA */}
+        {}
         <TouchableOpacity style={styles.mainBtn} onPress={() => router.push('/chat')}>
           <Text style={styles.mainBtnText}>🚀  Launch Orchestrator Studio</Text>
         </TouchableOpacity>
 
-        {/* Example queries */}
+        {}
         <Text style={styles.examplesTitle}>Try these queries:</Text>
         {EXAMPLES.map((ex, i) => (
           <TouchableOpacity key={i} style={styles.exampleCard} onPress={() => router.push({ pathname:'/chat', params:{ prefill: ex } })}>
@@ -54,7 +54,7 @@ export default function WelcomeScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Feature pills */}
+        {}
         <View style={styles.features}>
           {['Roman Urdu NLP','Multi-Factor Ranking','Dynamic Pricing','Auto-Rebooking','Dispute Resolution','Trace Logs'].map(f => (
             <View key={f} style={styles.featurePill}>

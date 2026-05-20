@@ -1,7 +1,4 @@
-/**
- * BazaarAI — Agent 11: Live Service Simulation Agent
- * Simulates the real-time service lifecycle: en-route → arrived → started → completed
- */
+
 
 function runLiveSimulationAgent(bookingOutput, logger) {
   logger.logAgentStart('LiveSimulationAgent', { booking_id: bookingOutput.booking_id });

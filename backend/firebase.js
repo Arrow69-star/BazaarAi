@@ -1,7 +1,4 @@
-/**
- * Firebase Admin SDK initialization
- * Falls back gracefully if credentials not provided
- */
+
 
 let db = null;
 

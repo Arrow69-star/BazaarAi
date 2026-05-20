@@ -1,7 +1,4 @@
-/**
- * BazaarAI — Agent 09: Booking Agent (CORE)
- * Simulates confirmed booking, writes to Firebase/local store, generates receipt
- */
+
 
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +19,7 @@ function loadBookingsDb() {
     if (fs.existsSync(BOOKINGS_FILE)) {
       return JSON.parse(fs.readFileSync(BOOKINGS_FILE, 'utf-8'));
     }
-  } catch (e) { /* ignore */ }
+  } catch (e) {  }
   return { bookings: [] };
 }
 
@@ -56,12 +53,12 @@ function runBookingAgent(schedulingOutput, decisionOutput, pricingOutput, intent
     status: 'CONFIRMED',
     created_at: now,
 
-    // User info
+    
     user_request: intentOutput.issue_description,
     service_type: intentOutput.service_type,
     location: intentOutput.location,
 
-    // Provider info
+    
     provider: {
       id: provider.id,
       name: provider.name,
@@ -70,7 +67,7 @@ function runBookingAgent(schedulingOutput, decisionOutput, pricingOutput, intent
       rating: provider.rating
     },
 
-    // Schedule
+    
     schedule: {
       slot_start: schedulingOutput.slot_start,
       slot_end: schedulingOutput.slot_end,
@@ -78,31 +75,31 @@ function runBookingAgent(schedulingOutput, decisionOutput, pricingOutput, intent
       duration_min: schedulingOutput.duration_min
     },
 
-    // Pricing
+    
     pricing: {
       total: pricingOutput.total_price,
       currency: 'PKR',
       breakdown: pricingOutput.breakdown
     },
 
-    // Metadata
+    
     cancellation_policy: 'Free cancellation up to 2 hours before appointment',
     confirmation_code: bookingId,
     receipt_url: `/api/bookings/${bookingId}/receipt`
   };
 
-  // Save to local bookings DB (Firebase fallback)
+  
   const db = loadBookingsDb();
   db.bookings.push(booking);
   saveBookingsDb(db);
   reasoning.push(`Booking saved to local DB: ${bookingId}`);
 
-  // Simulate Firebase write
+  
   let firebaseStatus = 'SIMULATED';
   try {
     const firebaseModule = require('../backend/firebase');
     if (firebaseModule && firebaseModule.db) {
-      // Real Firebase write would go here
+      
       firebaseStatus = 'FIREBASE_CONNECTED';
     }
   } catch (e) {

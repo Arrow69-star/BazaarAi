@@ -14,7 +14,7 @@ export default function WhatsAppSim({ messages }) {
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      {/* WhatsApp header */}
+      {}
       <LinearGradient colors={['#075E54', '#128C7E']} style={styles.waHeader}>
         <Text style={styles.waTitle}>📲 BazaarAI WhatsApp Simulation</Text>
         <Text style={styles.waSubtitle}>Real-world Pakistan workflow</Text>

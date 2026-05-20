@@ -1,9 +1,6 @@
-/**
- * BazaarAI — Agent 08: Scheduling Agent
- * Prevents double booking, adds travel buffer, suggests alternatives
- */
 
-const BOOKING_REGISTRY = new Map(); // In-memory mock booking store
+
+const BOOKING_REGISTRY = new Map(); 
 
 const TRAVEL_BUFFER_MIN = 30;
 const SLOT_DURATION_MIN = 120;
@@ -27,7 +24,7 @@ function isSlotConflict(providerId, requestedStart, durationMin) {
   for (const booking of existing) {
     const bStart = new Date(booking.start).getTime();
     const bEnd = new Date(booking.end).getTime();
-    // Overlap check + travel buffer
+    
     const bufferEnd = bEnd + TRAVEL_BUFFER_MIN * 60000;
     if (reqStart < bufferEnd && reqEnd > bStart) return true;
   }
@@ -48,7 +45,7 @@ function generateAlternativeSlots(requestedTime, provider, count = 3) {
   for (let i = 1; i <= count; i++) {
     const altTime = new Date(baseTime);
     altTime.setHours(altTime.getHours() + i * 2);
-    // Keep within reasonable hours (8am - 7pm)
+    
     if (altTime.getHours() >= 8 && altTime.getHours() <= 19) {
       slots.push({
         slot_start: altTime.toISOString(),
@@ -79,7 +76,7 @@ function runSchedulingAgent(decisionOutput, contextOutput, complexityOutput, log
   reasoning.push(`Requested slot: ${formatSlot(requestedTime)}`);
   reasoning.push(`Estimated job duration: ${durationMin} min + ${TRAVEL_BUFFER_MIN} min travel buffer`);
 
-  // Check conflict
+  
   const hasConflict = isSlotConflict(provider.id, requestedTime, durationMin);
 
   let scheduledStart = requestedTime;
@@ -88,7 +85,7 @@ function runSchedulingAgent(decisionOutput, contextOutput, complexityOutput, log
 
   if (hasConflict) {
     reasoning.push(`⚠️  Slot conflict detected at ${formatSlot(requestedTime)} for provider ${provider.name}`);
-    // Find next available slot
+    
     const alternatives = generateAlternativeSlots(requestedTime, provider, 5);
 
     if (alternatives.length > 0) {
@@ -103,7 +100,7 @@ function runSchedulingAgent(decisionOutput, contextOutput, complexityOutput, log
     reasoning.push(`No conflict — slot available at ${formatSlot(scheduledStart)}`);
   }
 
-  // Reserve the slot
+  
   reserveSlot(provider.id, scheduledStart, scheduledEnd, `TEMP_${Date.now()}`);
   reasoning.push(`Slot reserved: ${formatSlot(scheduledStart)} → ${formatSlot(scheduledEnd)}`);
 

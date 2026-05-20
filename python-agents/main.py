@@ -14,7 +14,7 @@ DATA_DIR      = os.path.join(os.path.dirname(__file__), '..', 'data')
 os.makedirs(os.path.join(os.path.dirname(__file__), 'data'), exist_ok=True)
 os.makedirs(os.path.join(os.path.dirname(__file__), 'logs'), exist_ok=True)
 
-app = FastAPI(title='BazaarAI Python Orchestrator', version='2.0.0')
+app = FastAPI(title='Khidmat AI Python Orchestrator', version='2.0.0')
 app.add_middleware(CORSMiddleware, allow_origins=['*'], allow_methods=['*'], allow_headers=['*'])
 
 class RequestBody(BaseModel):
@@ -24,7 +24,8 @@ class RequestBody(BaseModel):
 
 class DisputeBody(BaseModel):
     booking_id: str
-    reason: str   # 'NO_SHOW' | 'PRICE_DISAGREEMENT' | 'QUALITY_COMPLAINT'
+    reason: Optional[str] = None        # Legacy field
+    dispute_type: Optional[str] = None  # New field from mobile app
 
 @app.get('/health')
 def health():
@@ -33,7 +34,7 @@ def health():
         with open(os.path.join(DATA_DIR, 'providers.json')) as f:
             providers_count = len(json.load(f))
     except: pass
-    return {'status': 'ok', 'service': 'BazaarAI Python Orchestrator', 'version': '2.0.0',
+    return {'status': 'ok', 'service': 'Khidmat AI Python Orchestrator', 'version': '2.0.0',
             'agents': 5, 'providers_loaded': providers_count, 'timestamp': datetime.now().isoformat()}
 
 @app.post('/api/request')
@@ -77,22 +78,31 @@ def handle_dispute(body: DisputeBody):
     booking = next((b for b in db.get('bookings',[]) if b.get('booking_id') == body.booking_id), None)
     if not booking: raise HTTPException(404, detail='Booking not found')
 
+    # Resolve field name — JS sends dispute_type, legacy sends reason
+    dispute_reason = body.dispute_type or body.reason or 'QUALITY_COMPLAINT'
+
     # Resolution logic
     resolution = {}
-    if body.reason == 'NO_SHOW':
-        resolution = {'status': 'RESOLVED_REFUND', 'action': 'Full refund issued', 'compensation_pkr': booking.get('pricing',{}).get('total_pkr', 0), 'provider_flagged': True}
-    elif body.reason == 'PRICE_DISAGREEMENT':
-        refund = round(booking.get('pricing',{}).get('total_pkr', 0) * 0.15)
+    total_pkr = booking.get('pricing',{}).get('total_pkr', 0)
+    if dispute_reason in ('NO_SHOW', 'CANCELLATION'):
+        resolution = {'status': 'RESOLVED_REFUND', 'action': 'Full refund issued', 'compensation_pkr': total_pkr, 'provider_flagged': True}
+    elif dispute_reason in ('PRICE_DISAGREEMENT', 'PRICE_DISPUTE'):
+        refund = round(total_pkr * 0.15)
         resolution = {'status': 'RESOLVED_COMPENSATION', 'action': f'15% refund (PKR {refund}) applied', 'compensation_pkr': refund}
+    elif dispute_reason == 'BAD_SERVICE':
+        credit = round(total_pkr * 0.10)
+        resolution = {'status': 'RESOLVED_CREDIT', 'action': f'10% service credit (PKR {credit}) issued', 'compensation_pkr': credit}
     else:
-        resolution = {'status': 'RESOLVED_COMPENSATION', 'action': '10% service credit issued', 'compensation_pkr': round(booking.get('pricing',{}).get('total_pkr', 0) * 0.10)}
+        resolution = {'status': 'RESOLVED_COMPENSATION', 'action': '10% service credit issued', 'compensation_pkr': round(total_pkr * 0.10)}
 
-    # Update booking status
+    # Update booking status in file
     for b in db['bookings']:
         if b.get('booking_id') == body.booking_id:
-            b['status'] = 'DISPUTED'; b['dispute'] = {'reason': body.reason, **resolution, 'filed_at': datetime.now().isoformat()}; break
+            b['status'] = 'DISPUTED'
+            b['dispute'] = {'reason': dispute_reason, **resolution, 'filed_at': datetime.now().isoformat()}
+            break
     with open(BOOKINGS_FILE, 'w') as f: json.dump(db, f, indent=2)
-    return {'success': True, 'resolution': resolution}
+    return {'success': True, 'resolution': resolution, 'booking_id': body.booking_id}
 
 @app.get('/api/trace')
 def get_trace(limit: int = 50):
@@ -113,7 +123,9 @@ async def demo_low_confidence():
 
 if __name__ == '__main__':
     import uvicorn
-    print('\n*** BazaarAI Python Orchestrator v2.0 ***')
-    print('API: http://localhost:8000/health')
-    print('Docs: http://localhost:8000/docs\n')
+    print('\n=================================================')
+    print('  Khidmat AI -- Python Orchestrator v2.0')
+    print('  API:  http://localhost:8000/health')
+    print('  Docs: http://localhost:8000/docs')
+    print('=================================================\n')
     uvicorn.run('main:app', host='0.0.0.0', port=8000, reload=True)

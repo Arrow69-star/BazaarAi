@@ -15,12 +15,12 @@ export default function ProviderCard({ provider, rank, onSelect, selected }) {
       activeOpacity={0.85}
     >
       <View style={styles.card}>
-        {/* Rank Badge */}
+        {}
         <View style={[styles.rankBadge, { backgroundColor: rankColor + '22', borderColor: rankColor }]}>
           <Text style={[styles.rankText, { color: rankColor }]}>#{rank}</Text>
         </View>
 
-        {/* Header */}
+        {}
         <View style={styles.header}>
           <View style={styles.nameBlock}>
             <Text style={styles.name}>{provider.name}</Text>
@@ -32,7 +32,7 @@ export default function ProviderCard({ provider, rank, onSelect, selected }) {
           </View>
         </View>
 
-        {/* Score Bar */}
+        {}
         <View style={styles.scoreSection}>
           <View style={styles.scoreHeader}>
             <Text style={styles.scoreLabel}>Match Score</Text>
@@ -47,7 +47,7 @@ export default function ProviderCard({ provider, rank, onSelect, selected }) {
           </View>
         </View>
 
-        {/* Stats Row */}
+        {}
         <View style={styles.statsRow}>
           <Stat icon="📍" value={`${provider.distance_km}km`} label="Distance" />
           <Stat icon="🔧" value={provider.availability_status === 'AVAILABLE' ? 'Open' : 'Busy'}
@@ -56,7 +56,7 @@ export default function ProviderCard({ provider, rank, onSelect, selected }) {
           <Stat icon="💰" value={`${provider.price_base}`} label="Base PKR" />
         </View>
 
-        {/* Rank Reason */}
+        {}
         {provider.rank_reason && (
           <View style={styles.reasonBox}>
             <Text style={styles.reasonText}>💡 {provider.rank_reason}</Text>
