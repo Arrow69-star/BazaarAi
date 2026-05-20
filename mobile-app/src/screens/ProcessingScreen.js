@@ -60,7 +60,7 @@ export default function ProcessingScreen({ navigation, route }) {
     }
 
     try {
-      setPhase('Calling BazaarAI Backend...');
+      setPhase('Calling Khidmat AI Backend...');
       const response = await submitRequest(userText, {
         simulateCancellation,
         simulatePriceDispute,
@@ -204,7 +204,7 @@ function adaptPythonResponse(raw, userText) {
         risk_assessment: { level: top3[0]?.cancellation_rate > 0.1 ? 'MEDIUM' : 'LOW', notes: ['Verified local provider', 'High rating'] }
       },
       whatsapp_simulation: [
-        { sender: 'BazaarAI', text: `Hi ${mappedTop3[0]?.name}, new ${intent.service_type} job in ${intent.location}. Accept?`, time: 'Now' },
+        { sender: 'Khidmat AI', text: `Hi ${mappedTop3[0]?.name}, new ${intent.service_type} job in ${intent.location}. Accept?`, time: 'Now' },
         { sender: 'Provider', text: `Yes, accepting.`, time: 'Now' }
       ]
     },

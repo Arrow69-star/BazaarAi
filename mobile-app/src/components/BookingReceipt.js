@@ -7,7 +7,7 @@ export default function BookingReceipt({ receipt, booking }) {
   if (!receipt) return null;
 
   const handleShare = async () => {
-    await Share.share({ message: receipt.text || `BazaarAI Booking ${receipt.booking_id}` });
+    await Share.share({ message: receipt.text || `Khidmat AI Booking ${receipt.booking_id}` });
   };
 
   return (

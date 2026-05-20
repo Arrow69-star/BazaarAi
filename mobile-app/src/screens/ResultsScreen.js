@@ -221,7 +221,7 @@ export default function ResultsScreen({ navigation, route }) {
           <View>
             <View style={styles.waInfo}>
               <Text style={styles.waInfoText}>
-                📲 Simulating real WhatsApp communication between BazaarAI and provider — matching Pakistan informal economy workflow
+                📲 Simulating real WhatsApp communication between Khidmat AI and provider — matching Pakistan informal economy workflow
               </Text>
             </View>
             <WhatsAppSim messages={whatsappMsgs} />

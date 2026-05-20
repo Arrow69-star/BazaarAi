@@ -16,13 +16,13 @@ export default function WhatsAppSim({ messages }) {
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
       {}
       <LinearGradient colors={['#075E54', '#128C7E']} style={styles.waHeader}>
-        <Text style={styles.waTitle}>📲 BazaarAI WhatsApp Simulation</Text>
+        <Text style={styles.waTitle}>📲 Khidmat AI WhatsApp Simulation</Text>
         <Text style={styles.waSubtitle}>Real-world Pakistan workflow</Text>
       </LinearGradient>
 
       <View style={styles.chatBg}>
         {messages.map((msg, i) => {
-          const isBazaarAI = msg.from === 'BazaarAI';
+          const isBazaarAI = msg.from === 'BazaarAI' || msg.from === 'Khidmat AI';
           return (
             <Bubble
               key={i}

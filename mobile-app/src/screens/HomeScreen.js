@@ -58,7 +58,7 @@ export default function HomeScreen({ navigation }) {
             <LinearGradient colors={['#6C63FF22', '#22D3EE11']} style={styles.logoBadge}>
               <Text style={styles.logoEmoji}>🧠</Text>
             </LinearGradient>
-            <Text style={styles.appName}>BazaarAI</Text>
+            <Text style={styles.appName}>Khidmat AI</Text>
             <Text style={styles.tagline}>Autonomous Service Orchestration</Text>
             <View style={styles.statusDot}>
               <View style={styles.pulseDot} />
