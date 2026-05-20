@@ -36,7 +36,8 @@ All in **under 2 seconds**.
 
 ## 📱 Download APK
 
-> **[⬇️ Download Khidmat AI v1.0.0 APK](https://github.com/Arrow69-star/BazaarAi/releases/tag/v1.0.0)**  
+> **[⬇️ Direct Download: Khidmat AI v1.0.0 APK](https://expo.dev/artifacts/eas/nJFm3gapJTmCta9ppTrhLs.apk)**  
+> **[📋 Monitor EAS Build Details](https://expo.dev/accounts/ayyan234/projects/bazaarai/builds/b00565d1-57b5-44e5-a994-8d0c04e6c08a)**  
 > Compatible with Android 9+ (API 28+)
 
 ---
