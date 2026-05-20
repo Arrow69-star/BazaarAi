@@ -11,16 +11,26 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A0E1A"
     },
-    "assetBundlePatterns": ["**/*"],
-    "ios": { "supportsTablet": true },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
     "android": {
       "package": "com.bazaarai.app",
-      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0E1A"
       }
     },
-    "web": { "favicon": "./assets/favicon.png" }
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e721b33b-0015-49be-b85f-0a5be5199195"
+      }
+    }
   }
 }
