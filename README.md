@@ -36,8 +36,8 @@ All in **under 2 seconds**.
 
 ## 📱 Download APK
 
-> **[⬇️ Direct Download: Khidmat AI v1.0.0 APK](https://expo.dev/artifacts/eas/nJFm3gapJTmCta9ppTrhLs.apk)**  
-> **[📋 Monitor EAS Build Details](https://expo.dev/accounts/ayyan234/projects/bazaarai/builds/b00565d1-57b5-44e5-a994-8d0c04e6c08a)**  
+> **[⬇️ Direct Download: Khidmat AI v1.0.0 APK](https://expo.dev/artifacts/eas/ahyC5zagjHnZsN4PA7743P.apk)**  
+> **[📋 Monitor EAS Build Details](https://expo.dev/accounts/ayyan234/projects/bazaarai/builds/4b324097-7fec-497f-95ba-8c82c52165df)**  
 > Compatible with Android 9+ (API 28+)
 
 ---
