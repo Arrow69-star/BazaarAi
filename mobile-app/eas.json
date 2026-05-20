@@ -18,8 +18,8 @@
         "gradleCommand": ":app:assembleRelease"
       },
       "env": {
-        "EXPO_PUBLIC_PYTHON_API_URL": "http://192.168.100.18:8000",
-        "EXPO_PUBLIC_NODE_API_URL": "http://192.168.100.18:3000",
+        "EXPO_PUBLIC_PYTHON_API_URL": "http://10.46.117.76:8000",
+        "EXPO_PUBLIC_NODE_API_URL": "http://10.46.117.76:3000",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyBFK2n9WlS_NY558ljJ7UJdrvmk0UOdCCs"
       }
     },
