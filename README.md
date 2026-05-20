@@ -1,77 +1,226 @@
-# BazaarAI — Master README
-# Autonomous AI Service Orchestrator for the Informal Economy
+# 🤝 Khidmat AI — Autonomous Service Orchestrator
 
-BazaarAI is a hackathon-grade, production-ready Multi-Agent system that brings order, transparency, and automation to Pakistan's informal service economy (plumbers, electricians, AC technicians, etc.).
+<div align="center">
 
-## 🚀 Key Features Built (Super Prompt Requirements Met)
+![Version](https://img.shields.io/badge/version-1.0.0-006D77?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-Android%20|%20iOS-83C5BE?style=for-the-badge&logo=expo)
+![Backend](https://img.shields.io/badge/backend-Python%20FastAPI%20+%20Node.js-F4A261?style=for-the-badge)
+![AI](https://img.shields.io/badge/AI-Gemini%202.0%20Flash-4285F4?style=for-the-badge&logo=google)
+![License](https://img.shields.io/badge/license-MIT-3FB950?style=for-the-badge)
+![Hackathon](https://img.shields.io/badge/Google%20AI%20Hackathon-2026-E53E3E?style=for-the-badge&logo=google)
 
-### 1. **5-Agent Python Orchestrator**
-We built a robust Python FastAPI backend powering 5 specialized AI agents via the Google Gemini 2.0/1.5 Flash SDK:
-- **Intent Agent**: Extracts service, location, and time from Urdu, Roman Urdu, and English text with fallback logic.
-- **Discovery Agent**: Performs Haversine distance calculations (10km radius) to find the best local providers from 17 categories.
-- **Ranking Agent**: Implements the exact Super Prompt scoring algorithm (Distance 35%, Rating 30%, Availability 25%, Verification Bonus 10%) and generates "Why Not" explanations for rejected providers.
-- **Booking Agent**: Simulates an 8-step atomic booking lifecycle, generates dynamic receipts (`BK-YYYYMMDD-XXXX`), calculates dynamic pricing (surge + distance + base), and handles auto-rerouting on simulated provider cancellation.
-- **Followup Agent**: Generates a simulated T-1hr to T+Completion WhatsApp/SMS notification timeline.
+**A 5-agent AI pipeline that books home services in Pakistan — in Urdu, Roman Urdu, or English.**
 
-### 2. **React Native (Expo) Mobile App**
-The complete user interface with 5 mandatory screens:
-- **Chat Studio**: WhatsApp-style interface for entering requests (e.g., "G-13 mein AC wala chahiye").
-- **Processing Screen (AI Thinking)**: Beautiful pipeline visualization showing all 11 steps of the agentic orchestration.
-- **Results & Providers**: Displays the top 3 ranked providers, the strict pricing breakdown, and the reasoning for rejection ("Why Not Others").
-- **Booking History**: Tracks full lifecycle of all bookings with status badges (Confirmed, Completed, Cancelled, Disputed).
-- **Agent Trace Viewer**: A dedicated DEV mode screen that reads the live `agent_trace.jsonl` file to prove to judges exactly how the agents reasoned at each step.
+[📱 Download APK](#-download-apk) · [🚀 Quick Start](#-quick-start) · [🤖 Agent Pipeline](#-agent-pipeline) · [🎥 Demo](#-demo)
 
-### 3. **Hackathon Edge Cases & Simulations**
-- **Cancellation & Auto-Reroute**: Simulated 20% chance of provider cancellation, automatically triggering the Booking Agent to re-route to the 2nd best provider and showing a "Failure Story Banner" in the UI.
-- **Price Disputes**: Dispute resolution API that automatically issues 15% compensation for price disagreements or full refunds for no-shows.
-- **Low Confidence Prompt**: "Kuch kaam hai" forces the agent to ask clarifying questions before proceeding.
+</div>
 
 ---
 
-## 🛠️ How to Run the Project for Judges
+## ✨ What is Khidmat AI?
 
-We have created a single command script to launch the entire stack:
+Khidmat AI is an **autonomous multi-agent orchestration system** that lets Pakistani users book home services (AC repair, plumbing, electricians, etc.) simply by typing or speaking in their native language.
 
-1. Double-click **`start-all.bat`** in the root directory.
-2. This will open 3 terminal windows:
-   - Python FastAPI (Port 8000)
-   - Node.js API Fallback (Port 3000)
-   - Expo Mobile App Bundler
-3. Open the **Expo Go** app on your iPhone or Android and scan the QR code that appears in the 3rd terminal.
-   - *Ensure your phone and PC are on the same Wi-Fi network.*
+The user says: **"AC bilkul kaam nahi kar raha, G-13 mein kal subah chahiye"**
 
-### Important Keys Setup
-Make sure the `.env` file in the `backend/` folder contains your Gemini API key:
-```env
-GEMINI_API_KEY=your_key_here
+The system:
+1. 🧠 **Understands** the request (Urdu/Roman Urdu/English NLP)
+2. 🔍 **Discovers** matching providers within 10km
+3. 📊 **Ranks** them using 8 trust factors
+4. 💰 **Calculates** a transparent price
+5. 📅 **Books** the slot and sends notifications
+
+All in **under 2 seconds**.
+
+---
+
+## 📱 Download APK
+
+> **[⬇️ Download Khidmat AI v1.0.0 APK](https://github.com/Arrow69-star/BazaarAi/releases/tag/v1.0.0)**  
+> Compatible with Android 9+ (API 28+)
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- Python 3.10+
+- Expo Go app (for mobile testing)
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/Arrow69-star/BazaarAi.git
+cd BazaarAi
+```
+
+### 2. Configure Environment
+```bash
+# Copy and fill in your keys
+cp mobile-app/.env.example mobile-app/.env
+cp backend/.env.example backend/.env
+```
+
+Key variables in `mobile-app/.env`:
+```
+EXPO_PUBLIC_PYTHON_API_URL=http://YOUR_IP:8000
+EXPO_PUBLIC_NODE_API_URL=http://YOUR_IP:3000
+```
+
+### 3. Start Everything
+```bash
+# Windows — double-click or run:
+start-all.bat
+```
+
+Or manually:
+```bash
+# Terminal 1 — Python AI Backend
+python python-agents/main.py
+
+# Terminal 2 — Node.js Backend
+cd backend && npm start
+
+# Terminal 3 — Mobile App
+cd mobile-app && npx expo start --clear
+```
+
+### 4. Open on Phone
+- Install **Expo Go** from Play Store
+- Scan the QR code
+- Phone and PC must be on the **same WiFi**
+
+---
+
+## 🤖 Agent Pipeline
+
+```
+User Input
+    │
+    ▼
+┌─────────────────┐
+│  Intent Agent   │ ← Gemini 2.0 Flash / keyword fallback
+│ (NLP + Urdu)    │   Extracts: service, location, urgency
+└────────┬────────┘
+         │
+    ▼
+┌─────────────────┐
+│ Discovery Agent │ ← Searches 35 verified providers
+│ (Geo-filtered)  │   Radius: 10km, live availability
+└────────┬────────┘
+         │
+    ▼
+┌─────────────────┐
+│ Ranking Agent   │ ← 8-factor scoring algorithm:
+│ (Trust Score)   │   Rating, Distance, Reliability,
+│                 │   Availability, Price, Specialization,
+│                 │   Cancellation Rate, User Preference
+└────────┬────────┘
+         │
+    ▼
+┌─────────────────┐
+│ Pricing Agent   │ ← Base fee + Distance + Urgency
+│ (Transparent)   │   + Surge + Complexity → PKR range
+└────────┬────────┘
+         │
+    ▼
+┌─────────────────┐
+│ Booking Agent   │ ← Confirms slot, generates receipt
+│ + Followup      │   Schedules 4 notification events
+└─────────────────┘
 ```
 
 ---
 
-## 📱 Generating the APK
+## 📁 Project Structure
 
-To generate the standalone Android APK for your final submission:
-
-1. Open a terminal in the `mobile-app` folder.
-2. Run the EAS build command (requires a free Expo account):
-   ```bash
-   npm install -g eas-cli
-   eas login
-   eas build -p android --profile preview
-   ```
-3. Wait ~10 minutes. Expo will provide a direct download link to your `.apk` file.
-4. Upload this `.apk` to your Google Drive, make the link "Anyone with the link can view", and include it in your submission.
+```
+BazaarAi/
+├── agents/              # 15 Node.js agent modules
+│   ├── orchestrator.js  # Master pipeline controller
+│   ├── 01_intentAgent.js
+│   └── ... (15 agents total)
+├── python-agents/       # Python FastAPI backend
+│   ├── main.py          # FastAPI app (port 8000)
+│   └── agents/          # Python orchestrator
+├── backend/             # Node.js Express backend (port 3000)
+│   └── server.js        # API routes
+├── mobile-app/          # Expo React Native app
+│   ├── App.js           # Root with ThemeProvider + Drawer
+│   └── src/
+│       ├── screens/     # 8 screens
+│       ├── components/  # Reusable UI components
+│       ├── theme/       # Dark/light theme system
+│       └── services/    # API + Firebase services
+├── data/
+│   └── providers.json   # 35 providers, 17 service categories
+└── start-all.bat        # One-click launcher (Windows)
+```
 
 ---
 
-## 🎥 Recommended Demo Video Script
+## 🛠️ Tech Stack
 
-1. **Start Screen**: Show the `start-all.bat` script launching the servers.
-2. **Intent & Translation**: Type "Mujhe kal subah G-13 mein AC technician chahiye, budget kam hai" in the mobile app.
-3. **Pipeline View**: Show the "AI Thinking" screen animating through the 11 pipeline stages.
-4. **Transparency**: On the Results screen, tap "Decision" to show why the provider was picked, and show the "Why Not Others" section to prove the Ranking Agent works.
-5. **Trace Logs**: Open the "Trace" tab in the bottom bar. Expand a trace to show the raw JSON reasoning generated by Gemini for the judges.
-6. **Failure Simulation**: Tap the "Cancel & Rebook" demo button on the Home screen to trigger the Auto-Reroute feature and show the Failure Story Banner.
+| Layer | Technology |
+|---|---|
+| **AI Models** | Gemini 2.0 Flash Lite (NLP), Gemini 2.0 Flash (fallback) |
+| **Python API** | FastAPI + uvicorn (port 8000) |
+| **Node.js API** | Express.js (port 3000) |
+| **Mobile App** | React Native + Expo SDK 51 |
+| **Navigation** | React Navigation v6 (Drawer + Stack + Tabs) |
+| **Animations** | React Native Animated + Reanimated 3 |
+| **Database** | Firebase Firestore (bookings) + local JSON |
+| **Cloud** | GCP Project `ai-hackathon-496717` |
 
 ---
-*Built with ❤️ and Google Antigravity.*
+
+## 🧪 API Reference
+
+### Python Backend (port 8000)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Service health check |
+| POST | `/api/request` | Full 5-agent pipeline |
+| GET | `/api/providers` | List all providers |
+| GET | `/api/bookings` | All bookings |
+| POST | `/api/dispute` | File a dispute |
+| GET | `/api/trace` | Agent execution trace |
+
+### Node.js Backend (port 3000)
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health` | Service health check |
+| POST | `/api/request` | 15-agent Node pipeline |
+| GET | `/api/bookings` | All bookings |
+| POST | `/api/dispute` | Dispute resolution |
+
+---
+
+## 🎥 Demo
+
+### Test the API directly
+```bash
+# Make a service request
+curl -X POST http://localhost:8000/api/request \
+  -H "Content-Type: application/json" \
+  --data-binary '{"text": "plumber chahiye F-10 aaj pipe leak hai"}'
+```
+
+### Demo Scenarios
+1. **Normal booking** — `"AC technician G-13 kal subah"`
+2. **Urgent request** — `"bijli band hai abhi electrician chahiye"`
+3. **Budget conscious** — `"sasta plumber chahiye I-8"`
+4. **Low confidence** — `"koi banda chahiye"` → triggers clarification
+5. **Cancellation rebook** — POST `/api/demo/cancel-rebook`
+
+---
+
+## 👥 Team
+
+Built for the **Google AI Hackathon 2026** — Islamabad, Pakistan
+
+---
+
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE)
