@@ -1,6 +1,16 @@
-fastapi==0.109.0
-uvicorn[standard]==0.27.0
-google-generativeai==0.8.3
-python-dotenv==1.0.1
-pydantic==2.6.0
-httpx==0.27.0
+# Pinned to the versions this app is actually verified running against.
+fastapi==0.115.12
+uvicorn[standard]==0.34.2
+pydantic==2.12.5
+python-dotenv==1.2.2
+httpx==0.28.1
+
+# Required by booking_agent.py / escrow_agent.py for locked writes to bookings.json.
+# Previously missing — a clean install produced an app that crashed on import.
+filelock==3.24.3
+
+# The code prefers the new SDK (`from google import genai`) and falls back to the
+# legacy one only if that import fails. Both are declared so behaviour is identical
+# on a clean install; google-genai is the path actually exercised.
+google-genai==2.4.0
+google-generativeai==0.8.6

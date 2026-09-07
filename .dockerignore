@@ -1,7 +1,28 @@
 .git/
 node_modules/
-mobile-app/node_modules/
-mobile-app/.expo/
-logs/*.json
+mobile-app/
+backend/node_modules/
+khidmat-ai-hackathon/
+informal-economy-orchestrator/
+logs/
 *.log
+**/__pycache__/
+**/*.pyc
+
+# Never bake secrets into the image — Cloud Run supplies these as env vars.
 .env
+**/.env
+backend/.env
+service-account.json
+
+# Local runtime state; the container starts clean.
+python-agents/data/bookings.json
+python-agents/logs/
+python-agents/agents/logs/
+
+# Docs and build artefacts
+*.pdf
+*.apk
+*.aab
+*.zip
+AI DATA DONT COMIT/

@@ -18,14 +18,28 @@
         "gradleCommand": ":app:assembleRelease"
       },
       "env": {
-        "EXPO_PUBLIC_PYTHON_API_URL": "http://10.46.117.76:8000",
-        "EXPO_PUBLIC_NODE_API_URL": "http://10.46.117.76:3000",
-        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyBFK2n9WlS_NY558ljJ7UJdrvmk0UOdCCs"
+        "EXPO_PUBLIC_PYTHON_API_URL": "http://192.168.187.56:8000",
+        "EXPO_PUBLIC_NODE_API_URL": "http://192.168.187.56:3000"
+      }
+    },
+    "production-apk": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      },
+      "env": {
+        "EXPO_PUBLIC_PYTHON_API_URL": "https://khidmat-api.example.com",
+        "EXPO_PUBLIC_NODE_API_URL": "https://khidmat-worker.example.com"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_PYTHON_API_URL": "https://khidmat-api.example.com",
+        "EXPO_PUBLIC_NODE_API_URL": "https://khidmat-worker.example.com"
       }
     }
   },

@@ -23,8 +23,8 @@ let model = null;
 if (GoogleGenerativeAI && API_KEY && API_KEY !== 'your_gemini_api_key_here') {
   genAI = new GoogleGenerativeAI(API_KEY);
 
-  // Use gemini-2.0-flash-lite (free tier) or gemini-2.0-flash as primary models
-  const MODEL_NAMES = ['gemini-2.0-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash-8b', 'gemini-1.5-pro'];
+  // Use Google's latest Gemini models (gemini-3.5-flash / gemini-3.5-flash-lite)
+  const MODEL_NAMES = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
   model = genAI.getGenerativeModel({ model: MODEL_NAMES[0] });
   console.log(`[Gemini] ✅ Connected — model: ${MODEL_NAMES[0]}`);
 } else {

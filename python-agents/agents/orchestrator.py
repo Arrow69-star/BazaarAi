@@ -5,6 +5,7 @@ from agents.discovery_agent import run_discovery_agent
 from agents.ranking_agent   import run_ranking_agent
 from agents.booking_agent   import run_booking_agent
 from agents.followup_agent  import run_followup_agent
+from agents.escrow_agent    import calculate_escrow, attach_escrow_to_booking
 
 TRACE_FILE = os.path.join(os.path.dirname(__file__), 'logs', 'agent_trace.jsonl')
 os.makedirs(os.path.dirname(TRACE_FILE), exist_ok=True)
@@ -71,11 +72,20 @@ def orchestrate(text: str, simulate_cancellation: bool = False, force_mode: str 
     # ── AGENT 4: Booking ─────────────────────────────────────────────
     receipt = run_booking_agent(winner, intent, False, trace)
 
-    # ── AGENT 5: Follow-up ───────────────────────────────────────────
+    # ── AGENT 5: Smart Escrow & Payment Protection ───────────────────
+    escrow = calculate_escrow(intent.get('service_type', 'General'), intent.get('urgency_level', 'normal'),
+                              pricing=receipt.get('pricing'))
+    receipt['escrow'] = escrow
+    attach_escrow_to_booking(receipt.get('booking_id'), escrow)
+    # PIN is deliberately kept out of the trace — /api/trace is readable and the PIN releases funds.
+    trace.append({'agent': 'EscrowAgent', 'timestamp': datetime.now().isoformat(),
+                  'message': f"🔒 Escrow {escrow['escrow_id']} created. PKR {escrow['breakdown']['total_deposit_pkr']} held in secure contract."})
+
+    # ── AGENT 6: Follow-up ───────────────────────────────────────────
     followup = run_followup_agent(receipt, intent, trace)
 
     trace.append({'agent': 'Orchestrator', 'completed_at': datetime.now().isoformat(),
-                  'message': f"✅ Pipeline complete. Booking {receipt.get('booking_id')} confirmed.",
+                  'message': f"✅ Pipeline complete. Booking {receipt.get('booking_id')} confirmed with Smart Escrow protection.",
                   'session_id': session_id})
 
     result = {
@@ -84,7 +94,7 @@ def orchestrate(text: str, simulate_cancellation: bool = False, force_mode: str 
         'top3_providers': top3,
         'rejected_providers': [{'name': p.get('name'), 'score': p.get('score'), 'why_not': p.get('why_not')}
                                 for p in ranking.get('ranked', [])[3:]],
-        'receipt': receipt, 'followup': followup, 'trace': trace,
+        'receipt': receipt, 'escrow': escrow, 'followup': followup, 'trace': trace,
         'fallback_triggered': simulate_cancellation or force_mode == 'PROVIDER_CANCELLATION',
     }
 

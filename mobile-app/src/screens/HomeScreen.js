@@ -1,10 +1,13 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
   ScrollView, KeyboardAvoidingView, Platform, Animated, StatusBar,
+  ActivityIndicator, Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS, RADIUS, SPACING, SIZES, SHADOWS } from '../constants/theme';
+import { diagnoseRepair, warmUp } from '../services/api';
 
 const EXAMPLE_PROMPTS = [
   'Mujhe kal subah G-13 mein AC technician chahiye, budget kam hai',
@@ -14,10 +17,77 @@ const EXAMPLE_PROMPTS = [
   'AC repair G-14 tomorrow morning, urgent!',
 ];
 
+// Alert.alert is a no-op on web; fall back to the browser dialog.
+const notify = (title, message) => {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') window.alert(`${title}
+
+${message}`);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
 export default function HomeScreen({ navigation }) {
   const [text, setText] = useState('');
   const [selectedChip, setSelectedChip] = useState(null);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diagnosis, setDiagnosis] = useState(null);
   const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  // Wake a sleeping free-tier backend while the user is still typing their request.
+  useEffect(() => { warmUp(); }, []);
+
+  // Sends a real photo of the fault to the multimodal diagnostic agent (/api/diagnose).
+  const runPhotoDiagnostic = async (useCamera) => {
+    const perm = useCamera
+      ? await ImagePicker.requestCameraPermissionsAsync()
+      : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      notify('Permission needed', 'Allow access so the AI can look at the fault photo.');
+      return;
+    }
+
+    const picker = useCamera ? ImagePicker.launchCameraAsync : ImagePicker.launchImageLibraryAsync;
+    const shot = await picker({ base64: true, quality: 0.5, mediaTypes: ImagePicker.MediaTypeOptions.Images });
+    if (shot.canceled || !shot.assets?.length) return;
+
+    setDiagnosing(true);
+    setDiagnosis(null);
+    try {
+      const res = await diagnoseRepair(text.trim() || 'Is tasveer mein kya kharabi hai?', shot.assets[0].base64);
+      const report = res?.diagnostic_report;
+      // The API layer returns a canned report on failure; never present that as a real analysis.
+      if (res?.success === false || report?.offline) {
+        notify('Diagnosis unavailable', 'Could not reach the AI service. Please check your connection and try again.');
+      } else if (report) {
+        setDiagnosis(report);
+        if (!text.trim() && report.diagnosis_title) {
+          setText(`${report.diagnosis_title} - ${report.category} service chahiye`);
+        }
+      } else {
+        notify('Diagnosis failed', 'Could not analyse that photo. Please try again.');
+      }
+    } catch (e) {
+      notify('Diagnosis failed', e?.message || 'Backend unreachable.');
+    } finally {
+      setDiagnosing(false);
+    }
+  };
+
+  const choosePhotoSource = () => {
+    // Alert.alert renders nothing on web, and browsers have no camera roll —
+    // go straight to the file picker there.
+    if (Platform.OS === 'web') {
+      runPhotoDiagnostic(false);
+      return;
+    }
+    Alert.alert('AI Photo Diagnostic', 'Fault ki tasveer bhejein', [
+      { text: 'Take photo', onPress: () => runPhotoDiagnostic(true) },
+      { text: 'Choose from gallery', onPress: () => runPhotoDiagnostic(false) },
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
 
   const handleSubmit = () => {
     if (!text.trim()) return;
@@ -66,9 +136,9 @@ export default function HomeScreen({ navigation }) {
             </View>
           </View>
 
-          {}
+          {/* Input Card */}
           <View style={[styles.inputCard, SHADOWS.primary]}>
-            <Text style={styles.inputLabel}>🗣️ Apni request likhein (Urdu / Roman Urdu / English)</Text>
+            <Text style={styles.inputLabel}>🗣️ Apni request likhein ya bolen (Urdu / Roman Urdu / English)</Text>
             <TextInput
               style={styles.input}
               value={text}
@@ -82,6 +152,83 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.inputFooter}>
               <Text style={styles.charCount}>{text.length} chars</Text>
               <Text style={styles.langHint}>🌐 Urdu • Roman • English</Text>
+            </View>
+
+            {/* Multimodal Perception Tools */}
+            <View style={styles.multimodalRow}>
+              <TouchableOpacity
+                style={[styles.toolBtn, styles.toolBtnPrimary]}
+                onPress={choosePhotoSource}
+                disabled={diagnosing}
+              >
+                {diagnosing
+                  ? <ActivityIndicator size="small" color={COLORS.primary} />
+                  : <Text style={styles.toolIcon}>📷</Text>}
+                <Text style={styles.toolText}>
+                  {diagnosing ? 'Analysing...' : 'AI Photo Diagnostic'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.toolBtn}
+                onPress={() => {
+                  setText('Bijli ka breaker spark kar raha hai, electrician chahiye I-8');
+                }}
+              >
+                <Text style={styles.toolIcon}>⚡</Text>
+                <Text style={styles.toolText}>Emergency example</Text>
+              </TouchableOpacity>
+            </View>
+
+            {diagnosis && (
+              <View style={styles.diagBox}>
+                <View style={styles.diagHeader}>
+                  <Text style={styles.diagTitle}>🔍 {diagnosis.diagnosis_title}</Text>
+                  <Text style={[styles.diagSeverity,
+                    diagnosis.severity === 'CRITICAL' && styles.diagCritical]}>
+                    {diagnosis.severity}
+                  </Text>
+                </View>
+                <Text style={styles.diagCause}>{diagnosis.root_cause_analysis}</Text>
+
+                {!!diagnosis.safety_precautions?.length && (
+                  <View style={styles.diagSection}>
+                    <Text style={styles.diagLabel}>⚠️ Safety first</Text>
+                    {diagnosis.safety_precautions.map((s, i) => (
+                      <Text key={i} style={styles.diagItem}>• {s}</Text>
+                    ))}
+                  </View>
+                )}
+
+                {!!diagnosis.recommended_parts?.length && (
+                  <View style={styles.diagSection}>
+                    <Text style={styles.diagLabel}>🔩 Parts likely needed</Text>
+                    {diagnosis.recommended_parts.map((p, i) => (
+                      <Text key={i} style={styles.diagItem}>
+                        • {p.part_name} — PKR {p.est_price_pkr}
+                      </Text>
+                    ))}
+                  </View>
+                )}
+
+                <Text style={styles.diagEstimate}>
+                  Estimated total: PKR {diagnosis.estimated_total_pkr?.min} – {diagnosis.estimated_total_pkr?.max}
+                  {'  ·  '}~{diagnosis.estimated_duration_minutes} min
+                </Text>
+                <Text style={styles.diagSource}>
+                  {diagnosis.source === 'gemini_multimodal' ? 'Analysed by Gemini vision' : 'Offline estimate'}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Commercialization & Trust Banner */}
+          <View style={styles.passBanner}>
+            <View style={styles.passLeft}>
+              <Text style={styles.passTitle}>⭐ Khidmat Pass™</Text>
+              <Text style={styles.passSub}>Every booking is escrow-protected • Upgrade to waive surge fees</Text>
+            </View>
+            <View style={styles.passBadge}>
+              <Text style={styles.passBadgeText}>LEARN MORE</Text>
             </View>
           </View>
 
@@ -210,6 +357,73 @@ const styles = StyleSheet.create({
   inputFooter: { flexDirection: 'row', justifyContent: 'space-between', marginTop: SPACING.sm },
   charCount: { color: COLORS.textMuted, fontSize: SIZES.xs },
   langHint: { color: COLORS.primary, fontSize: SIZES.xs },
+  multimodalRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: SPACING.md,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
+  },
+  toolBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1E293B',
+    paddingVertical: 8,
+    borderRadius: RADIUS.sm,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  toolIcon: { fontSize: 13 },
+  toolText: { color: COLORS.textSecondary, fontSize: 10, fontWeight: '600' },
+  toolBtnPrimary: { borderColor: COLORS.primary, backgroundColor: '#1E293B' },
+  diagBox: {
+    marginTop: SPACING.md,
+    backgroundColor: '#0F172A',
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#38BDF844',
+  },
+  diagHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  diagTitle: { color: '#38BDF8', fontSize: SIZES.sm, fontWeight: '700', flex: 1, paddingRight: 8 },
+  diagSeverity: {
+    color: COLORS.textSecondary, fontSize: 9, fontWeight: '800',
+    backgroundColor: '#334155', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4,
+  },
+  diagCritical: { color: '#FCA5A5', backgroundColor: '#7F1D1D55' },
+  diagCause: { color: COLORS.textSecondary, fontSize: SIZES.xs, lineHeight: 17 },
+  diagSection: { marginTop: SPACING.sm },
+  diagLabel: { color: COLORS.textPrimary, fontSize: SIZES.xs, fontWeight: '700', marginBottom: 2 },
+  diagItem: { color: COLORS.textSecondary, fontSize: SIZES.xs, lineHeight: 16 },
+  diagEstimate: { color: COLORS.accent, fontSize: SIZES.xs, fontWeight: '700', marginTop: SPACING.sm },
+  diagSource: { color: COLORS.textMuted, fontSize: 9, marginTop: 2 },
+  passBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#0F172A',
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    marginBottom: SPACING.lg,
+    borderWidth: 1,
+    borderColor: '#F59E0B44',
+  },
+  passLeft: { flex: 1 },
+  passTitle: { color: '#FBBF24', fontSize: SIZES.sm, fontWeight: '800' },
+  passSub: { color: COLORS.textMuted, fontSize: 10, marginTop: 2 },
+  passBadge: {
+    backgroundColor: '#F59E0B22',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  passBadgeText: { color: '#FBBF24', fontSize: 10, fontWeight: '800' },
   sectionLabel: {
     color: COLORS.textSecondary, fontSize: SIZES.sm,
     fontWeight: '600', marginBottom: SPACING.sm,

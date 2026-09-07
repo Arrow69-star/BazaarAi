@@ -182,23 +182,29 @@ function adaptPythonResponse(raw, userText) {
     rank_reason: p.why_selected || p.why_not || 'Ranked via Super Prompt formula',
   }));
 
+  const p = receipt.pricing || {};
+  const subtotal = (p.base_fee || 0) + (p.distance_fee || 0) + (p.urgency_fee || 0);
+  const surgeAmount = Math.max(0, Math.round((p.total_pkr || subtotal) - subtotal));
+
   const pricingBreakdown = {
-    base_fee: { amount: receipt.pricing?.base_fee || 1000, label: 'Base Service Fee' },
-    distance_cost: { amount: receipt.pricing?.distance_fee || 0, label: 'Distance Fee' },
-    urgency_fee: { amount: receipt.pricing?.urgency_fee || 0, label: 'Urgency Fee' },
-    demand_surge: { amount: Math.round((receipt.pricing?.surge_multiplier - 1) * 100) || 0, label: 'Surge' }
+    base_fee: { amount: p.base_fee || 1000, label: 'Base Service Fee' },
+    distance_cost: { amount: p.distance_fee || 0, label: 'Distance Fee' },
+    urgency_fee: { amount: p.urgency_fee || 0, label: 'Urgency Fee' },
+    demand_surge: { amount: surgeAmount, label: `Surge (${p.surge_multiplier || 1}x)` }
   };
 
   return {
     session_id: raw.session_id,
     raw_input: userText,
+    escrow: raw.escrow || receipt.escrow || null,
     confidence_breakdown: { overall: Math.round((intent.confidence || 0.9) * 100) },
     stages: {
       intent: intent,
       matching: { top3: mappedTop3 },
       pricing: {
         total_price: receipt.pricing?.total_pkr || 1000,
-        breakdown: pricingBreakdown
+        breakdown: pricingBreakdown,
+        escrow: raw.escrow || receipt.escrow || null
       },
       decision: {
         risk_assessment: { level: top3[0]?.cancellation_rate > 0.1 ? 'MEDIUM' : 'LOW', notes: ['Verified local provider', 'High rating'] }

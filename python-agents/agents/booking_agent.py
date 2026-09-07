@@ -82,6 +82,7 @@ def run_booking_agent(provider: dict, intent: dict, simulate_cancellation: bool,
     receipt = {
         'booking_id': booking_id,
         'status': 'CONFIRMED',
+        'provider_name': provider.get('name'),
         'provider': {
             'id': provider.get('id'), 'name': provider.get('name'),
             'phone': provider.get('phone'), 'rating': provider.get('rating'),

@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORS, RADIUS, SPACING, SIZES } from '../constants/theme';
 
-export default function PricingBreakdown({ pricing }) {
+export default function PricingBreakdown({ pricing, escrow: escrowProp }) {
   if (!pricing) return null;
+  const escrow = escrowProp || pricing.escrow;
 
   const rows = [
     { label: 'Visit + Service Fee', key: 'base_fee', icon: '🔧' },
@@ -44,7 +45,48 @@ export default function PricingBreakdown({ pricing }) {
       </View>
 
       <View style={styles.badge}>
-        <Text style={styles.badgeText}>💵 Cash on Delivery</Text>
+        <Text style={styles.badgeText}>🔒 Smart Escrow Protected • 100% Satisfaction Guarantee</Text>
+      </View>
+
+      <View style={styles.escrowBox}>
+        <View style={styles.escrowHeader}>
+          <Text style={styles.escrowTitle}>🛡️ Digital Escrow Vault</Text>
+          <Text style={styles.escrowStatus}>
+            {escrow?.status === 'RELEASED_TO_KAARIGAR' ? 'RELEASED' : 'FUNDS SECURED'}
+          </Text>
+        </View>
+
+        {escrow ? (
+          <>
+            <View style={styles.escrowRow}>
+              <Text style={styles.escrowRowLabel}>Held in escrow</Text>
+              <Text style={styles.escrowRowValue}>PKR {escrow.breakdown?.total_deposit_pkr}</Text>
+            </View>
+            <View style={styles.escrowRow}>
+              <Text style={styles.escrowRowLabel}>Platform fee</Text>
+              <Text style={styles.escrowRowValue}>PKR {escrow.breakdown?.platform_fee_pkr}</Text>
+            </View>
+            <View style={styles.escrowRow}>
+              <Text style={styles.escrowRowLabel}>Kaarigar payout</Text>
+              <Text style={styles.escrowRowValue}>PKR {escrow.breakdown?.kaarigar_payout_pkr}</Text>
+            </View>
+            <View style={styles.pinBox}>
+              <Text style={styles.pinLabel}>Completion PIN — share only when the job is done</Text>
+              <Text style={styles.pinValue}>{escrow.completion_pin}</Text>
+              <Text style={styles.escrowId}>{escrow.escrow_id}</Text>
+            </View>
+          </>
+        ) : (
+          <Text style={styles.escrowText}>
+            Customer payment is held securely in escrow. Kaarigar receives payout only after you verify the job and release the 4-digit PIN.
+          </Text>
+        )}
+
+        <View style={styles.paymentRow}>
+          {(escrow?.payment_methods_supported || ['EasyPaisa', 'JazzCash', 'Raast', 'Cash on Escrow']).map(m => (
+            <Text key={m} style={styles.paymentBadge}>{m}</Text>
+          ))}
+        </View>
       </View>
 
       {pricing.budget_alternative && (
@@ -113,4 +155,53 @@ const styles = StyleSheet.create({
   altText: { color: COLORS.textSecondary, fontSize: SIZES.xs, lineHeight: 18 },
   altHighlight: { color: COLORS.success, fontWeight: '600' },
   altSub: { color: COLORS.textMuted, fontSize: SIZES.xs, marginTop: 4 },
+  escrowBox: {
+    marginTop: SPACING.md,
+    backgroundColor: '#1E293B',
+    borderRadius: RADIUS.md,
+    padding: SPACING.md,
+    borderWidth: 1,
+    borderColor: '#38BDF844',
+  },
+  escrowHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  escrowTitle: { color: '#38BDF8', fontSize: SIZES.sm, fontWeight: '700' },
+  escrowStatus: {
+    color: COLORS.success,
+    fontSize: 10,
+    fontWeight: '800',
+    backgroundColor: COLORS.success + '22',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  escrowText: { color: COLORS.textSecondary, fontSize: SIZES.xs, lineHeight: 17, marginBottom: 8 },
+  escrowRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 3 },
+  escrowRowLabel: { color: COLORS.textSecondary, fontSize: SIZES.xs },
+  escrowRowValue: { color: '#E2E8F0', fontSize: SIZES.xs, fontWeight: '700' },
+  pinBox: {
+    marginTop: SPACING.sm,
+    marginBottom: 8,
+    backgroundColor: '#0F172A',
+    borderRadius: RADIUS.sm,
+    padding: SPACING.sm,
+    alignItems: 'center',
+  },
+  pinLabel: { color: COLORS.textMuted, fontSize: 10, marginBottom: 2 },
+  pinValue: { color: '#38BDF8', fontSize: SIZES.xl, fontWeight: '800', letterSpacing: 6 },
+  escrowId: { color: COLORS.textMuted, fontSize: 10, marginTop: 2 },
+  paymentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  paymentBadge: {
+    color: '#E2E8F0',
+    fontSize: 10,
+    fontWeight: '600',
+    backgroundColor: '#334155',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 4,
+  },
 });
