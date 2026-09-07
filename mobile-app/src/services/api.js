@@ -16,6 +16,8 @@ const pythonApi = axios.create({
 });
 const PIPELINE_TIMEOUT = 90000;
 
+// Reserved for the Node worker (live tracking + notifications, Phase 4). The booking
+// pipeline no longer falls back to it — the Python service is canonical.
 const nodeApi = axios.create({
   baseURL: NODE_API,
   timeout: 20000,
@@ -30,7 +32,6 @@ export const warmUp = () => {
 
 // ── Core Request ─────────────────────────────────────────────────────────────
 export const submitRequest = async (text, options = {}) => {
-  // Try Python backend first (Gemini-powered), fall back to Node.js
   try {
     const res = await pythonApi.post('/api/request', {
       text,
@@ -38,19 +39,9 @@ export const submitRequest = async (text, options = {}) => {
       force_mode: options.forceMode || null,
     }, { timeout: PIPELINE_TIMEOUT });
     return { ...res.data, source: 'python' };
-  } catch (pyErr) {
-    console.warn('[API] Python backend unavailable, trying Node.js...', pyErr.message);
-    try {
-      const res = await nodeApi.post('/api/request', {
-        text,
-        simulate_cancellation: options.simulateCancellation || false,
-        simulate_price_dispute: options.simulatePriceDispute || false,
-      });
-      return { ...res.data, source: 'node' };
-    } catch (nodeErr) {
-      console.error('[API] Both backends unavailable');
-      throw new Error('Service temporarily unavailable — running in demo mode');
-    }
+  } catch (err) {
+    console.error('[API] Backend unavailable:', err.message);
+    throw new Error('Service temporarily unavailable — running in demo mode');
   }
 };
 
@@ -60,50 +51,29 @@ export const getProviders = async (filters = {}) => {
     const res = await pythonApi.get('/api/providers', { params: filters });
     return res.data;
   } catch {
-    try {
-      const res = await nodeApi.get('/api/providers', { params: filters });
-      return res.data;
-    } catch {
-      return { count: 0, providers: [] };
-    }
+    return { count: 0, providers: [] };
   }
 };
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
 export const getAllBookings = async () => {
   try {
-    // Python backend stores bookings in python-agents/data/bookings.json
     const res = await pythonApi.get('/api/bookings');
     return res.data;
   } catch {
-    try {
-      const res = await nodeApi.get('/api/bookings');
-      return res.data;
-    } catch {
-      return { bookings: [] };
-    }
+    return { bookings: [] };
   }
 };
 
 export const getBooking = async (bookingId) => {
-  try {
-    const res = await pythonApi.get(`/api/bookings/${bookingId}`);
-    return res.data;
-  } catch {
-    const res = await nodeApi.get(`/api/bookings/${bookingId}`);
-    return res.data;
-  }
+  const res = await pythonApi.get(`/api/bookings/${bookingId}`);
+  return res.data;
 };
 
 // ── Dispute ───────────────────────────────────────────────────────────────────
 export const submitDispute = async (bookingId, reason) => {
-  try {
-    const res = await pythonApi.post('/api/dispute', { booking_id: bookingId, dispute_type: reason });
-    return res.data;
-  } catch {
-    const res = await nodeApi.post('/api/dispute', { booking_id: bookingId, dispute_type: reason });
-    return res.data;
-  }
+  const res = await pythonApi.post('/api/dispute', { booking_id: bookingId, dispute_type: reason });
+  return res.data;
 };
 
 // ── Agent Trace ───────────────────────────────────────────────────────────────
@@ -119,7 +89,7 @@ export const getTrace = async (limit = 50) => {
 // ── Demo Scenarios ────────────────────────────────────────────────────────────
 export const demoCancelRebook = async (text) => {
   try {
-    const res = await nodeApi.post('/api/demo/cancel-rebook', { text });
+    const res = await pythonApi.post('/api/demo/cancel-rebook', { text }, { timeout: PIPELINE_TIMEOUT });
     return res.data;
   } catch {
     throw new Error('Demo endpoint unavailable');
@@ -128,7 +98,7 @@ export const demoCancelRebook = async (text) => {
 
 export const demoLowConfidence = async () => {
   try {
-    const res = await nodeApi.post('/api/demo/low-confidence');
+    const res = await pythonApi.post('/api/demo/low-confidence', {}, { timeout: PIPELINE_TIMEOUT });
     return res.data;
   } catch {
     throw new Error('Demo endpoint unavailable');
@@ -141,12 +111,7 @@ export const healthCheck = async () => {
     const res = await pythonApi.get('/health');
     return { ...res.data, backend: 'python' };
   } catch {
-    try {
-      const res = await nodeApi.get('/api/health');
-      return { ...res.data, backend: 'node' };
-    } catch {
-      return { status: 'offline', backend: 'none' };
-    }
+    return { status: 'offline', backend: 'none' };
   }
 };
 

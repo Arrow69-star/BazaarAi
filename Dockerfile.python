@@ -25,7 +25,13 @@ USER appuser
 
 WORKDIR /app/python-agents
 
-# Cloud Run injects PORT (8080). Shell form so the variable expands.
+# Cloud Run / Render inject PORT. Shell form so the variable expands.
 ENV PORT=8080
 EXPOSE 8080
-CMD exec uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1
+
+# Seed before serving: on a host with an ephemeral filesystem the SQLite database is
+# empty on every boot, and an unseeded database means zero providers and no bookable
+# requests. seed_db.py is idempotent, so this is also safe against a persistent
+# Postgres (it updates providers rather than duplicating them).
+CMD exec sh -c "python seed_db.py && exec uvicorn main:app --host 0.0.0.0 --port ${PORT} --workers 1"
+

@@ -1,29 +1,26 @@
-# BazaarAI Backend — Docker Image for Google Cloud Run
+# Khidmat AI — Node worker image.
+#
+# NOTE: this is NOT the main API. The canonical backend is the Python service —
+# build that with Dockerfile.python (see DEPLOY.md). This image only runs the Node
+# worker, which currently reports health and will host live tracking and
+# notification delivery in Phase 4.
 FROM node:20-slim
 
 WORKDIR /app
 
-# Copy package files
+# Dependencies first so this layer caches across source changes.
 COPY backend/package*.json ./backend/
-COPY agents/ ./agents/
-COPY data/ ./data/
 
-# Install dependencies
 WORKDIR /app/backend
-RUN npm install --production
+RUN npm install --omit=dev
 
-# Copy backend source
+# Backend source. The former agents/ pipeline was retired to legacy/ and is
+# deliberately not copied into the image.
 COPY backend/ .
 
-# Create logs directory
-RUN mkdir -p /tmp/bazaarai_logs
-
-# Expose port
 EXPOSE 3000
 
-# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
   CMD node -e "require('http').get('http://localhost:3000/api/health', r => r.statusCode === 200 ? process.exit(0) : process.exit(1))"
 
-# Start
 CMD ["node", "server.js"]

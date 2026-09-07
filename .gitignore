@@ -50,3 +50,6 @@ dist/
 build/
 *.apk
 *.aab
+
+# SQLite runtime database (seeded from data/providers.json)
+python-agents/data/khidmat.db

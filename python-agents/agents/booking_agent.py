@@ -1,28 +1,16 @@
-import json, os, random, string
+import json, os, sys, random, string
 from datetime import datetime
-from filelock import FileLock
 
-BOOKINGS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'bookings.json')
-TRACE_FILE    = os.path.join(os.path.dirname(__file__), '..', 'logs', 'agent_trace.jsonl')
-os.makedirs(os.path.dirname(BOOKINGS_FILE), exist_ok=True)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from db import Booking, get_session
+
+TRACE_FILE = os.path.join(os.path.dirname(__file__), '..', 'logs', 'agent_trace.jsonl')
 os.makedirs(os.path.dirname(TRACE_FILE), exist_ok=True)
 
 def _gen_booking_id():
     date = datetime.now().strftime('%Y%m%d')
     suffix = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     return f'BK-{date}-{suffix}'
-
-def _load_bookings():
-    if not os.path.exists(BOOKINGS_FILE):
-        return {'bookings': []}
-    with open(BOOKINGS_FILE, 'r') as f:
-        return json.load(f)
-
-def _save_bookings(db):
-    lock_path = BOOKINGS_FILE + '.lock'
-    with FileLock(lock_path):
-        with open(BOOKINGS_FILE, 'w') as f:
-            json.dump(db, f, indent=2)
 
 def _append_trace(entry: dict):
     with open(TRACE_FILE, 'a', encoding='utf-8') as f:
@@ -98,10 +86,28 @@ def run_booking_agent(provider: dict, intent: dict, simulate_cancellation: bool,
         'created_at': datetime.now().isoformat(),
     }
 
-    # STEP 8: Save to bookings.json atomically
-    db = _load_bookings()
-    db['bookings'].append(receipt)
-    _save_bookings(db)
+    # STEP 8: Persist the booking
+    session = get_session()
+    try:
+        session.add(Booking(
+            booking_id=booking_id,
+            provider_id=provider.get('id'),
+            provider_name=provider.get('name', ''),
+            provider_snapshot=receipt['provider'],
+            service=intent.get('service_type') or '',
+            location=intent.get('location') or '',
+            time_slot=preferred_slot,
+            time_preference=intent.get('time_preference') or '',
+            status='CONFIRMED',
+            pricing=pricing,
+            confirmation_message=confirm_msg[:400],
+        ))
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
     # STEP 9: Notification simulation
     receipt['notification'] = _notification_sim(provider, booking_id, intent)

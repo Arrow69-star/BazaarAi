@@ -1,7 +1,9 @@
-import json, os, math
+import os, sys, math
 from datetime import datetime
 
-DATA_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'data', 'providers.json')
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from sqlalchemy import select
+from db import Provider, get_session
 
 def _haversine(lat1, lon1, lat2, lon2):
     R = 6371
@@ -30,11 +32,15 @@ ADJACENT = {
 def run_discovery_agent(intent: dict, trace: list) -> dict:
     trace.append({'agent': 'DiscoveryAgent', 'started_at': datetime.now().isoformat(), 'input': intent})
 
+    session = get_session()
     try:
-        with open(DATA_FILE, 'r', encoding='utf-8') as f:
-            all_providers = json.load(f)
+        # Only active providers are bookable; inactive ones stay in the table for history.
+        all_providers = [p.to_dict() for p in
+                         session.scalars(select(Provider).where(Provider.active.is_(True)))]
     except Exception as e:
         trace[-1].update({'status': 'error', 'error': str(e)}); return {'providers': [], 'error': str(e)}
+    finally:
+        session.close()
 
     svc = intent.get('service_type')
     loc = intent.get('location', 'G-13')

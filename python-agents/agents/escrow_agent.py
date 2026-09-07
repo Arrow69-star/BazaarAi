@@ -1,12 +1,16 @@
-import json, os, uuid
-from datetime import datetime
-from filelock import FileLock
+import os
+import sys
+import uuid
+from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from db import Booking, Escrow, LedgerEntry, get_session
 
 PLATFORM_COMMISSION_RATE = 0.12  # 12% platform fee
 MAX_PIN_ATTEMPTS = 5
 
-BOOKINGS_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'bookings.json')
-_LOCK_PATH = BOOKINGS_FILE + '.lock'
+_FROZEN_STATUSES = ('REFUNDED_TO_CUSTOMER', 'PARTIALLY_REFUNDED', 'FROZEN_PENDING_DISPUTE')
+
 
 def calculate_escrow(service_type: str, urgency: str, is_pass_holder: bool = False,
                      pricing: dict = None) -> dict:
@@ -70,100 +74,121 @@ def calculate_escrow(service_type: str, urgency: str, is_pass_holder: bool = Fal
         'created_at': datetime.now().isoformat()
     }
 
+
 def attach_escrow_to_booking(booking_id: str, escrow: dict) -> bool:
-    """Persists the escrow record (including its completion PIN) onto the stored
-    booking, so release can verify against server-held state."""
-    with FileLock(_LOCK_PATH):
-        if not os.path.exists(BOOKINGS_FILE):
+    """Persists the escrow (including its completion PIN) against the booking, so
+    release can verify against server-held state."""
+    session = get_session()
+    try:
+        if session.get(Booking, booking_id) is None:
             return False
-        with open(BOOKINGS_FILE, 'r', encoding='utf-8') as f:
-            db = json.load(f)
-        for b in db.get('bookings', []):
-            if b.get('booking_id') == booking_id:
-                b['escrow'] = escrow
-                with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
-                    json.dump(db, f, indent=2)
-                return True
-    return False
+
+        breakdown = escrow.get('breakdown') or {}
+        session.add(Escrow(
+            escrow_id=escrow['escrow_id'],
+            booking_id=booking_id,
+            status=escrow.get('status', 'HOLD_IN_ESCROW'),
+            currency=escrow.get('currency', 'PKR'),
+            total_deposit_pkr=breakdown.get('total_deposit_pkr', 0),
+            platform_fee_pkr=breakdown.get('platform_fee_pkr', 0),
+            kaarigar_payout_pkr=breakdown.get('kaarigar_payout_pkr', 0),
+            breakdown=breakdown,
+            completion_pin=str(escrow.get('completion_pin', '')),
+            payment_methods_supported=escrow.get('payment_methods_supported') or [],
+        ))
+        session.commit()
+        return True
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
-def apply_dispute_to_escrow(escrow: dict, resolution: dict) -> dict:
-    """Reflects a dispute resolution on held funds, so a promised refund can't also
-    be released to the kaarigar. Mutates and returns the escrow dict."""
-    if not escrow or escrow.get('status') == 'RELEASED_TO_KAARIGAR':
+def apply_dispute_to_escrow(escrow: 'Escrow', resolution: dict) -> dict:
+    """Reflects a dispute resolution on held funds, so a promised refund cannot also
+    be released to the kaarigar. Mutates the Escrow row; the caller commits."""
+    if escrow is None or escrow.status == 'RELEASED_TO_KAARIGAR':
         return escrow
 
     compensation = resolution.get('compensation_pkr') or 0
-    deposit = (escrow.get('breakdown') or {}).get('total_deposit_pkr') or 0
+    deposit = escrow.total_deposit_pkr or 0
 
     if deposit and compensation >= deposit:
-        escrow['status'] = 'REFUNDED_TO_CUSTOMER'
+        escrow.status = 'REFUNDED_TO_CUSTOMER'
     elif compensation > 0:
-        escrow['status'] = 'PARTIALLY_REFUNDED'
+        escrow.status = 'PARTIALLY_REFUNDED'
     else:
-        escrow['status'] = 'FROZEN_PENDING_DISPUTE'
+        escrow.status = 'FROZEN_PENDING_DISPUTE'
 
-    escrow['refunded_pkr'] = compensation
-    escrow['dispute_applied_at'] = datetime.now().isoformat()
+    escrow.refunded_pkr = compensation
     return escrow
 
 
 def release_escrow(escrow_id: str, pin_entered: str) -> dict:
-    """Releases escrow funds to the kaarigar if the entered completion PIN matches
-    the one stored on the booking. The correct PIN is never accepted from the caller."""
-    with FileLock(_LOCK_PATH):
-        if not os.path.exists(BOOKINGS_FILE):
+    """Releases escrow funds to the kaarigar if the entered completion PIN matches the
+    one stored against the booking. The correct PIN is never accepted from the caller."""
+    session = get_session()
+    try:
+        escrow = session.get(Escrow, escrow_id)
+        if escrow is None:
             return {'escrow_id': escrow_id, 'status': 'NOT_FOUND',
                     'error': 'No escrow found for that ID.', 'released_at': None}
 
-        with open(BOOKINGS_FILE, 'r', encoding='utf-8') as f:
-            db = json.load(f)
-
-        booking = next((b for b in db.get('bookings', [])
-                        if (b.get('escrow') or {}).get('escrow_id') == escrow_id), None)
-        if not booking:
-            return {'escrow_id': escrow_id, 'status': 'NOT_FOUND',
-                    'error': 'No escrow found for that ID.', 'released_at': None}
-
-        escrow = booking['escrow']
-
-        if escrow.get('status') in ('REFUNDED_TO_CUSTOMER', 'PARTIALLY_REFUNDED', 'FROZEN_PENDING_DISPUTE'):
+        if escrow.status in _FROZEN_STATUSES:
             return {'escrow_id': escrow_id, 'status': 'FROZEN_PENDING_DISPUTE',
                     'error': 'These funds are frozen by an open dispute and cannot be released.',
                     'released_at': None}
 
-        if escrow.get('status') == 'RELEASED_TO_KAARIGAR':
+        if escrow.status == 'RELEASED_TO_KAARIGAR':
             return {'escrow_id': escrow_id, 'status': 'ALREADY_RELEASED',
                     'error': 'These funds have already been released.',
-                    'released_at': escrow.get('released_at')}
+                    'released_at': escrow.released_at.isoformat() if escrow.released_at else None}
 
-        attempts = escrow.get('failed_pin_attempts', 0)
-        if attempts >= MAX_PIN_ATTEMPTS:
+        if escrow.failed_pin_attempts >= MAX_PIN_ATTEMPTS:
             return {'escrow_id': escrow_id, 'status': 'LOCKED',
                     'error': 'Too many incorrect PIN attempts. Contact support to release these funds.',
                     'released_at': None}
 
-        if str(pin_entered).strip() != str(escrow.get('completion_pin')):
-            escrow['failed_pin_attempts'] = attempts + 1
-            with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(db, f, indent=2)
+        if str(pin_entered).strip() != str(escrow.completion_pin):
+            escrow.failed_pin_attempts += 1
+            remaining = MAX_PIN_ATTEMPTS - escrow.failed_pin_attempts
+            session.commit()
             return {'escrow_id': escrow_id, 'status': 'PIN_MISMATCH',
                     'error': 'Invalid 4-digit completion PIN. Escrow remains secured.',
-                    'attempts_remaining': MAX_PIN_ATTEMPTS - (attempts + 1),
-                    'released_at': None}
+                    'attempts_remaining': remaining, 'released_at': None}
 
-        released_at = datetime.now().isoformat()
-        escrow['status'] = 'RELEASED_TO_KAARIGAR'
-        escrow['released_at'] = released_at
-        booking['status'] = 'COMPLETED'
-        with open(BOOKINGS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(db, f, indent=2)
+        released_at = datetime.now(timezone.utc)
+        escrow.status = 'RELEASED_TO_KAARIGAR'
+        escrow.released_at = released_at
+
+        booking = session.get(Booking, escrow.booking_id)
+        if booking is not None:
+            booking.status = 'COMPLETED'
+
+        # Money moved, so record what the platform earned and what the provider is owed.
+        session.add(LedgerEntry(
+            booking_id=escrow.booking_id,
+            provider_id=(booking.provider_id if booking else '') or '',
+            gross_pkr=escrow.total_deposit_pkr,
+            commission_pkr=escrow.platform_fee_pkr,
+            payout_pkr=escrow.kaarigar_payout_pkr,
+            commission_rate=PLATFORM_COMMISSION_RATE,
+            entry_type='ESCROW_RELEASED',
+        ))
+        session.commit()
 
         return {
             'escrow_id': escrow_id,
-            'booking_id': booking.get('booking_id'),
+            'booking_id': escrow.booking_id,
             'status': 'RELEASED_TO_KAARIGAR',
             'message': 'Funds successfully released to kaarigar wallet.',
-            'payout_pkr': escrow.get('breakdown', {}).get('kaarigar_payout_pkr'),
-            'released_at': released_at,
+            'payout_pkr': escrow.kaarigar_payout_pkr,
+            'platform_fee_pkr': escrow.platform_fee_pkr,
+            'released_at': released_at.isoformat(),
         }
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()

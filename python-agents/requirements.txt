@@ -5,9 +5,12 @@ pydantic==2.12.5
 python-dotenv==1.2.2
 httpx==0.28.1
 
-# Required by booking_agent.py / escrow_agent.py for locked writes to bookings.json.
-# Previously missing — a clean install produced an app that crashed on import.
-filelock==3.24.3
+# Data layer. SQLite by default; set DATABASE_URL to move to Postgres
+# (add psycopg[binary] when you do).
+sqlalchemy==2.0.52
+
+# Per-IP rate limiting on the Gemini-backed and escrow routes.
+slowapi==0.1.10
 
 # The code prefers the new SDK (`from google import genai`) and falls back to the
 # legacy one only if that import fails. Both are declared so behaviour is identical
