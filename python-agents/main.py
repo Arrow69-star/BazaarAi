@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -19,7 +19,9 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from sqlalchemy import select, func
-from db import Booking, Escrow, Dispute, LedgerEntry, Provider, get_session, init_db
+from db import Booking, Escrow, Dispute, LedgerEntry, Provider, User, get_session, init_db
+import auth as auth_mod
+from auth import admin_user, current_user, optional_user
 from agents.orchestrator import orchestrate
 from agents.diagnostic_agent import run_diagnostic_agent
 from agents.escrow_agent import release_escrow, apply_dispute_to_escrow
@@ -68,10 +70,26 @@ class EscrowReleaseBody(BaseModel):
     escrow_id: str
     pin_entered: str
 
+class OtpRequestBody(BaseModel):
+    phone: str
+
+class OtpVerifyBody(BaseModel):
+    phone: str
+    code: str
+
 class DisputeBody(BaseModel):
     booking_id: str
     reason: Optional[str] = None        # Legacy field
     dispute_type: Optional[str] = None  # New field from mobile app
+
+def _assert_can_access(booking, claims: dict):
+    """A booking is visible to its owner and to admins. Bookings made while signed
+    out have no owner and stay accessible, since nobody can claim them."""
+    if claims.get('role') == 'admin':
+        return
+    if booking.user_id is not None and booking.user_id != int(claims['sub']):
+        raise HTTPException(403, detail='This booking belongs to another account.')
+
 
 @app.get('/health')
 def health():
@@ -87,14 +105,64 @@ def health():
 
 @app.post('/api/request')
 @limiter.limit('10/minute')
-async def handle_request(request: Request, body: RequestBody):
+async def handle_request(request: Request, body: RequestBody,
+                         claims: dict = Depends(optional_user)):
     if not body.text or len(body.text.strip()) < 3:
         raise HTTPException(400, detail='Input text too short')
     try:
         result = orchestrate(body.text, body.simulate_cancellation or False, body.force_mode)
-        return {'success': True, 'result': result}
     except Exception as e:
         raise HTTPException(500, detail=str(e))
+
+    # Booking anonymously still works, but a signed-in caller owns the booking so it
+    # can appear in their history and be disputed later.
+    booking_id = (result.get('receipt') or {}).get('booking_id')
+    if claims and booking_id:
+        session = get_session()
+        try:
+            booking = session.get(Booking, booking_id)
+            if booking is not None:
+                booking.user_id = int(claims['sub'])
+                session.commit()
+        finally:
+            session.close()
+
+    return {'success': True, 'result': result}
+
+@app.post('/api/auth/request-otp')
+@limiter.limit('5/minute')
+def request_otp(request: Request, body: OtpRequestBody):
+    """Sends a login code to the phone number."""
+    code = auth_mod.create_otp(body.phone)
+    response = {'success': True, 'phone': auth_mod.normalise_phone(body.phone),
+                'expires_in_minutes': auth_mod.OTP_TTL_MINUTES}
+    if not auth_mod.DELIVERY_CONFIGURED:
+        # No SMS provider yet, so the code cannot reach the handset. Returning it
+        # keeps development usable; this disappears once SMS_PROVIDER_KEY is set.
+        response['dev_code'] = code
+        response['warning'] = 'No SMS provider configured - code returned for development only.'
+    return response
+
+
+@app.post('/api/auth/verify-otp')
+@limiter.limit('10/minute')
+def verify_otp(request: Request, body: OtpVerifyBody):
+    token = auth_mod.verify_otp(body.phone, body.code)
+    return {'success': True, 'token': token, 'token_type': 'bearer',
+            'expires_in_days': auth_mod.TOKEN_TTL_DAYS}
+
+
+@app.get('/api/auth/me')
+def whoami(claims: dict = Depends(current_user)):
+    session = get_session()
+    try:
+        user = session.get(User, int(claims['sub']))
+        if user is None:
+            raise HTTPException(404, detail='User not found')
+        return {'id': user.id, 'phone': user.phone, 'name': user.name, 'role': user.role}
+    finally:
+        session.close()
+
 
 @app.get('/api/providers')
 def get_providers(service: Optional[str] = None, sector: Optional[str] = None):
@@ -113,32 +181,40 @@ def get_providers(service: Optional[str] = None, sector: Optional[str] = None):
         session.close()
 
 @app.get('/api/bookings')
-def get_all_bookings():
+def get_all_bookings(claims: dict = Depends(current_user)):
+    """A caller's own bookings. Previously this returned every customer's booking,
+    phone numbers included, to anyone who asked."""
     session = get_session()
     try:
         stmt = select(Booking).order_by(Booking.created_at.desc())
+        if claims.get('role') != 'admin':
+            stmt = stmt.where(Booking.user_id == int(claims['sub']))
         return {'bookings': [b.to_dict() for b in session.scalars(stmt)]}
     finally:
         session.close()
 
 @app.get('/api/bookings/{booking_id}')
-def get_booking(booking_id: str):
+def get_booking(booking_id: str, claims: dict = Depends(current_user)):
     session = get_session()
     try:
         booking = session.get(Booking, booking_id)
-        if not booking: raise HTTPException(404, detail='Booking not found')
+        if not booking:
+            raise HTTPException(404, detail='Booking not found')
+        _assert_can_access(booking, claims)
         return booking.to_dict()
     finally:
         session.close()
 
 @app.post('/api/dispute')
 @limiter.limit('20/minute')
-def handle_dispute(request: Request, body: DisputeBody):
+def handle_dispute(request: Request, body: DisputeBody,
+                   claims: dict = Depends(current_user)):
     session = get_session()
     try:
         booking = session.get(Booking, body.booking_id)
         if not booking:
             raise HTTPException(404, detail='Booking not found')
+        _assert_can_access(booking, claims)
 
         # JS sends dispute_type; legacy callers send reason.
         dispute_reason = body.dispute_type or body.reason or 'QUALITY_COMPLAINT'
@@ -187,7 +263,8 @@ def handle_dispute(request: Request, body: DisputeBody):
         session.close()
 
 @app.get('/api/trace')
-def get_trace(limit: int = 50):
+def get_trace(limit: int = 50, claims: dict = Depends(admin_user)):
+    """Internal agent reasoning. Admin-only - it exposes how decisions are made."""
     if not os.path.exists(TRACE_FILE): return {'entries': []}
     with open(TRACE_FILE) as f:
         lines = [json.loads(l) for l in f.readlines() if l.strip()]

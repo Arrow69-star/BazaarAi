@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler'; // Must be FIRST import
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator }      from '@react-navigation/drawer';
@@ -25,6 +25,10 @@ import TrackingScreen   from './src/screens/TrackingScreen';
 import FeedbackScreen   from './src/screens/FeedbackScreen';
 import HistoryScreen    from './src/screens/HistoryScreen';
 import AgentTraceScreen from './src/screens/AgentTraceScreen';
+import LoginScreen      from './src/screens/LoginScreen';
+
+import { loadToken, getToken } from './src/services/auth';
+import { setAuthTokenGetter } from './src/services/api';
 
 const Stack  = createNativeStackNavigator();
 const Tab    = createBottomTabNavigator();
@@ -112,6 +116,8 @@ function RootNav() {
       <Stack.Screen name="Booking"    component={BookingScreen} />
       <Stack.Screen name="Tracking"   component={TrackingScreen} />
       <Stack.Screen name="Feedback"   component={FeedbackScreen} />
+      <Stack.Screen name="Login"      component={LoginScreen}
+                    options={{ presentation: 'modal' }} />
     </Stack.Navigator>
   );
 }
@@ -120,6 +126,13 @@ function RootNav() {
 function AppInner() {
   const [appReady, setAppReady] = React.useState(false);
   const { isDark } = useTheme();
+
+  // Restore the saved session before any request goes out, and let the API client
+  // read the token synchronously from then on.
+  useEffect(() => {
+    setAuthTokenGetter(getToken);
+    loadToken();
+  }, []);
 
   if (!appReady) {
     return <LoadingScreen onFinish={() => setAppReady(true)} />;

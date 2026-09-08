@@ -16,6 +16,19 @@ const pythonApi = axios.create({
 });
 const PIPELINE_TIMEOUT = 90000;
 
+// Attaches the stored session token to every request. Set via setAuthTokenGetter so
+// this module does not import the auth service (which imports this one).
+let authTokenGetter = () => null;
+export const setAuthTokenGetter = (fn) => { authTokenGetter = fn; };
+
+pythonApi.interceptors.request.use((config) => {
+  const token = authTokenGetter();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export { pythonApi };
+
 // Reserved for the Node worker (live tracking + notifications, Phase 4). The booking
 // pipeline no longer falls back to it — the Python service is canonical.
 const nodeApi = axios.create({
@@ -60,7 +73,9 @@ export const getAllBookings = async () => {
   try {
     const res = await pythonApi.get('/api/bookings');
     return res.data;
-  } catch {
+  } catch (e) {
+    // 401 means "sign in to see your history", which is not the same as having none.
+    if (e.response?.status === 401) return { bookings: [], requiresAuth: true };
     return { bookings: [] };
   }
 };

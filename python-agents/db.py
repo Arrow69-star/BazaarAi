@@ -81,6 +81,20 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     phone: Mapped[str] = mapped_column(String(32), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(120), default='')
+    role: Mapped[str] = mapped_column(String(16), default='customer')  # customer | admin
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
+
+
+class OtpCode(Base):
+    """Short-lived login codes. The code itself is stored hashed, never in clear."""
+    __tablename__ = 'otp_codes'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    phone: Mapped[str] = mapped_column(String(32), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    consumed: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
@@ -219,9 +233,45 @@ class LedgerEntry(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
 
 
+def _add_missing_columns():
+    """Adds columns that exist on the models but not yet in the database.
+
+    create_all() only creates missing *tables* - it will not touch a table that
+    already exists, so a new field on an existing model silently fails at query
+    time. This covers that common case (both SQLite and Postgres support
+    ADD COLUMN) and is safe to run repeatedly.
+
+    It deliberately does not handle renames, drops or type changes: once the
+    schema stabilises this should be replaced with Alembic migrations.
+    """
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue  # create_all() handles brand-new tables
+            present = {c['name'] for c in inspector.get_columns(table.name)}
+            for column in table.columns:
+                if column.name in present:
+                    continue
+                col_type = column.type.compile(engine.dialect)
+                default = ''
+                if column.default is not None and getattr(column.default, 'is_scalar', False):
+                    value = column.default.arg
+                    default = f" DEFAULT {value!r}" if isinstance(value, str) else f' DEFAULT {value}'
+                conn.execute(text(
+                    f'ALTER TABLE {table.name} ADD COLUMN {column.name} {col_type}{default}'
+                ))
+                print(f'[db] added missing column {table.name}.{column.name}')
+
+
 def init_db():
-    """Create any missing tables. Safe to call on every startup."""
+    """Create any missing tables and columns. Safe to call on every startup."""
     Base.metadata.create_all(engine)
+    _add_missing_columns()
 
 
 def get_session():

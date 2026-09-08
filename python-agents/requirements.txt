@@ -12,6 +12,9 @@ sqlalchemy==2.0.52
 # Per-IP rate limiting on the Gemini-backed and escrow routes.
 slowapi==0.1.10
 
+# Signs the session tokens issued after phone-OTP login.
+PyJWT==2.13.0
+
 # The code prefers the new SDK (`from google import genai`) and falls back to the
 # legacy one only if that import fails. Both are declared so behaviour is identical
 # on a clean install; google-genai is the path actually exercised.

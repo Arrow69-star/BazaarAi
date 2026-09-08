@@ -20,11 +20,15 @@ export default function BookingHistoryScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [expanded, setExpanded] = useState(null);
+  const [needsAuth, setNeedsAuth] = useState(false);
 
   const fetchBookings = async () => {
     try {
       const data = await getAllBookings();
-      
+      // History is per-account now, so an unauthenticated caller gets a prompt
+      // rather than a misleading "no bookings yet".
+      setNeedsAuth(Boolean(data.requiresAuth));
+
       const sorted = (data.bookings || []).sort((a, b) =>
         new Date(b.created_at || 0) - new Date(a.created_at || 0)
       );
@@ -113,11 +117,27 @@ export default function BookingHistoryScreen({ navigation }) {
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primary} />}
           ListEmptyComponent={
-            <View style={styles.center}>
-              <Text style={styles.emptyIcon}>📭</Text>
-              <Text style={styles.emptyText}>No bookings yet</Text>
-              <Text style={styles.emptySub}>Submit a request to get started</Text>
-            </View>
+            needsAuth ? (
+              <View style={styles.center}>
+                <Text style={styles.emptyIcon}>🔒</Text>
+                <Text style={styles.emptyText}>Sign in to see your bookings</Text>
+                <Text style={styles.emptySub}>
+                  Your booking history is private to your account
+                </Text>
+                <TouchableOpacity
+                  style={styles.signInBtn}
+                  onPress={() => navigation.navigate('Login')}
+                >
+                  <Text style={styles.signInBtnText}>Sign in</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.center}>
+                <Text style={styles.emptyIcon}>📭</Text>
+                <Text style={styles.emptyText}>No bookings yet</Text>
+                <Text style={styles.emptySub}>Submit a request to get started</Text>
+              </View>
+            )
           }
         />
       )}
@@ -169,5 +189,13 @@ const styles = StyleSheet.create({
   loadingText:  { color: COLORS.textMuted, fontSize: SIZES.base },
   emptyIcon:    { fontSize: 48, marginBottom: SPACING.md },
   emptyText:    { color: COLORS.textPrimary, fontSize: SIZES.lg, fontWeight: '700' },
+  signInBtn: {
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.primary,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm + 2,
+  },
+  signInBtnText: { color: '#fff', fontSize: SIZES.sm, fontWeight: '700' },
   emptySub:     { color: COLORS.textMuted, fontSize: SIZES.sm, marginTop: SPACING.xs },
 });
